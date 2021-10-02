@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import ArrayCell, ArrayType, Assign, AttributeDecl, Block, Break, CallStmt, ClassDecl, ConstDecl, Continue, For, Id, If, Instance, IntLiteral, MethodDecl, Return, Static, UnaryOp, VarDecl, VoidType
+from main.bkool.utils.AST import ArrayCell, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, Break, CallStmt, ClassDecl, ConstDecl, Continue, FieldAccess, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, Program, Return, Static, StringType, UnaryOp, VarDecl, VoidType
 
 class ASTGeneration(BKOOLVisitor):
     
@@ -495,7 +495,7 @@ class ASTGeneration(BKOOLVisitor):
         elif ctx.literal():
             return ctx.literal().accept(self)
         elif ctx.ID():
-            return ctx.ID().getText()
+            return Id(ctx.ID().getText())
         elif ctx.methodInvoke():
             return ctx.methodInvoke().accept(self)
         elif ctx.THIS():
@@ -505,11 +505,10 @@ class ASTGeneration(BKOOLVisitor):
         return ctx.ID().getText() + ctx.listExp().accept(self)
     def visitListExp(self, ctx: BKOOLParser.ListExpContext):
         # listExp: (LB arguList? RB);
-        if ctx.arguList():
-            return ctx.arguList().accept(self) 
+        return ctx.arguList().accept(self) if ctx.arguList() else []
     def visitArguList(self, ctx: BKOOLParser.ArguListContext):
         # arguList: exp (COMMA exp)*;
-        return reduce(lambda acc, ele: acc + ele.accept(self), ctx.exp()[1:], ctx.exp(0).accept(self))
+        return reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.exp()[1:], [ctx.exp(0).accept(self)])
     
     def visitLiteral(self, ctx: BKOOLParser.LiteralContext):
         if ctx.INTEGER_LITERAL():

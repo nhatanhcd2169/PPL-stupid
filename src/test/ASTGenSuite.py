@@ -47,6 +47,9 @@ class ASTGenSuite(unittest.TestCase):
             static float y;
             final static float x = 4 * 5 + 7 / 3 * a[5], y = 3;
             static final int x = 123, y = 5;
+            int abc = !b;
+            string x = y ^ "ok";
+            int s = new Shape(a, b, 12, 25, 232525223);
         }
         class phuong extends kori {}        
         """
@@ -54,7 +57,7 @@ class ASTGenSuite(unittest.TestCase):
         self.assertTrue(TestAST.test(input,expect,302))
         
     def test_4(self):
-        input = """"""
+        input = """class a {}"""
         expect = ""
         self.assertTrue(TestAST.test(input,expect,303))
    
