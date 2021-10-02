@@ -27,6 +27,8 @@ class ASTGenSuite(unittest.TestCase):
                 for x := 5 to 10 do
                 {
                     break;
+                    if a + b == 5 then 
+                        a := b;
                     continue;
                     return (x < 5);
                 }

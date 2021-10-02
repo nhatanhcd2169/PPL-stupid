@@ -112,13 +112,6 @@ class ASTGeneration(BKOOLVisitor):
     
     
     
-    
-    
-    
-    
-    
-    
-    
     def visitObjectDecl(self, ctx: BKOOLParser.ObjectDeclContext):
         return None
     
@@ -277,7 +270,7 @@ class ASTGeneration(BKOOLVisitor):
     
     
     def visitIfStmt(self, ctx: BKOOLParser.IfStmtContext):
-        # ifStmt: IF exp THEN (stmt | blockStmt) (ELSE (stmt | blockStmt))?;    
+        # ifStmt: IF exp THEN stmt (ELSE stmt)?; 
         return If(ctx.exp().accept(self), ctx.stmt(0).accept(self), ctx.stmt(1).accept(self) if ctx.stmt(1) else None)
     
     
@@ -298,13 +291,14 @@ class ASTGeneration(BKOOLVisitor):
         # scalarVar: ID
         return Id(ctx.ID().getText())
     
-    
     def visitContinueStmt(self, ctx: BKOOLParser.ContinueStmtContext):
         # continueStmt: CONTINUE S_COLON;
         return Continue()
+    
     def visitBreakStmt(self, ctx: BKOOLParser.BreakStmtContext):
         # breakStmt: BREAK S_COLON;
         return Break()
+    
     def visitReturnStmt(self, ctx: BKOOLParser.ReturnStmtContext):
         # returnStmt: RETURN exp S_COLON;
         return Return(ctx.exp().accept(self))
