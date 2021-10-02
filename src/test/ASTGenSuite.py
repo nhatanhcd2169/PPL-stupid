@@ -13,6 +13,9 @@ class ASTGenSuite(unittest.TestCase):
         """More complex program"""
         input = """class kori extends phuong {
             kori() {}
+            int count(int a; float b; string c, d, e) {}
+            float[5] getFloatArray() {}
+            void main() {}
         }"""
         expect = """Program([ClassDecl(Id(kori),Id(phuong),[])])"""
         self.assertTrue(TestAST.test(input,expect,301))
@@ -22,6 +25,7 @@ class ASTGenSuite(unittest.TestCase):
         input = """
         class kori extends phuong {
             int phuongggggg;
+            float[5] uwu;
             final float x = 7;
             static float y;
             final static float x = 4 * 5 + 7 / 3 * a[5], y = 3;

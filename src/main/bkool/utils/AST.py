@@ -252,7 +252,7 @@ class AttributeDecl(MemDecl):
     decl: StoreDecl # VarDecl for mutable or ConstDecl for immutable
     def __str__(self):
         return "AttributeDecl(" + str(self.kind) + ',' + str(self.decl) + ")"
-# [AttributeDecl(Instance(), VarDecl()), AttributeDecl(Instance(), ConstDecl()), MethodDecl(), MethodDecl()]
+    
 class IntType(Type):
     def __str__(self):
         return "IntType"

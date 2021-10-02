@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import ArrayCell, ArrayType, AttributeDecl, Block, ClassDecl, ConstDecl, Instance, IntLiteral, MethodDecl, Static, UnaryOp, VarDecl
+from main.bkool.utils.AST import ArrayCell, ArrayType, AttributeDecl, Block, ClassDecl, ConstDecl, Instance, IntLiteral, MethodDecl, Static, UnaryOp, VarDecl, VoidType
 
 class ASTGeneration(BKOOLVisitor):
 
@@ -72,7 +72,7 @@ class ASTGeneration(BKOOLVisitor):
         
     def visitCompositeType(self, ctx: BKOOLParser.CompositeTypeContext):
         # compositeType: scalarType LSB INTEGER_LITERAL RSB; 
-        return ArrayType(IntLiteral(int(ctx.INTEGER_LITERAL().getText()), ctx.scalarType().accept(self)))
+        return ArrayType(IntLiteral(int(ctx.INTEGER_LITERAL().getText())), ctx.scalarType().accept(self))
     
     
     
@@ -138,28 +138,57 @@ class ASTGeneration(BKOOLVisitor):
     
     
     def visitMethodDecl(self, ctx: BKOOLParser.MethodDeclContext):
-        # methodDecl: constructorDecl | normalMethodDecl;
+        # methodDecl: constructorDecl | normalMethodDecl | mainMethodDecl;
         if ctx.constructorDecl():
             return ctx.constructorDecl().accept(self)
-        return ctx.normalMethodDecl().accept(self)
+        elif ctx.normalMethodDecl():
+            return ctx.normalMethodDecl().accept(self)
+        else:
+            return ctx.mainMethodDecl().accept(self)
 
-    
-    def visiConstructorDecl(self, ctx: BKOOLParser.ConstructorDeclContext):
+    def visitConstructorDecl(self, ctx: BKOOLParser.ConstructorDeclContext):
         # constructorDecl: ID LB paramList? RB blockStmt;
         paramList = ctx.paramList().accept(self) if ctx.paramList() else []
-        return MethodDecl(Instance(), Id("<init>"), paramList, None, ctx.blockStmt().accept(self))
+        return [MethodDecl(Instance(), Id("<init>"), paramList, VoidType(), ctx.voidBlockStmt().accept(self))]
+    
+    def visitMainMethodDecl(self, ctx:BKOOLParser.MainMethodDeclContext):
+        # mainMethodDecl: VOID MAIN LB RB voidBlockStmt;
+        return [MethodDecl(Static(), Id("main"), [], VoidType(), ctx.voidBlockStmt().accept(self))]
+    
+    def visitNormalMethodDecl(self, ctx: BKOOLParser.NormalMethodDeclContext):
+        # normalMethodDecl: (STATIC)? (attributeType | VOID) ID LB paramList? RB (blockStmt | voidBlockStmt);
+        kind = Static() if ctx.STATIC() else Instance()
+        returnType = VoidType() if ctx.VOID() else ctx.attributeType().accept(self)
+        block = ctx.voidBlockStmt().accept(self) if ctx.VOID() else ctx.blockStmt().accept(self)
+        paramList = ctx.paramList().accept(self) if ctx.paramList() else []
+        return [MethodDecl(kind, Id(ctx.ID().getText()), paramList, returnType, block)]
     
     def visitParamList(self, ctx: BKOOLParser.ParamListContext):
         # paramList: params (S_COLON params)*;
         return reduce(lambda acc, ele: acc + ele.accept(self), ctx.params()[1:], ctx.params(0).accept(self))
     
     def visitParams(self, ctx: BKOOLParser.ParamsContext):
-        return None
+        # params: (monoParams | polyParams);
+        return ctx.monoParams().accept(self) if ctx.monoParams() else ctx.polyParams().accept(self)
     
+    def visitMonoParams(self, ctx: BKOOLParser.MonoParamsContext):
+        # monoParams: paramType monoParam (COMMA monoParam)*;
+        type = ctx.paramType().accept(self)
+        def mapMonoParam(param):
+            return VarDecl(param.accept(self), type, None)
+        return list(map(mapMonoParam, ctx.monoParam()))
     
+    def visitPolyParams(self, ctx: BKOOLParser.PolyParamsContext):
+        # polyParams: polyParam (COMMA polyParam)*;
+        return reduce(lambda acc, ele: acc + ele.accept(self), ctx.polyParam()[1:], ctx.polyParam(0).accept(self))
     
-    
-    
+    def visitPolyParam(self, ctx: BKOOLParser.PolyParamContext):
+        # polyParam: paramType monoParam;
+        return [VarDecl(ctx.monoParam().accept(self), ctx.paramType().accept(self), None)]
+        
+    def visitMonoParam(self, ctx: BKOOLParser.MonoParamContext):
+        # monoParam: ID
+        return Id(ctx.ID().getText())
     
     
     
@@ -198,9 +227,28 @@ class ASTGeneration(BKOOLVisitor):
         elif ctx.returnStmt():
             return ctx.returnStmt().accept(self)
         
+    def visitStmtWithoutReturn(self, ctx: BKOOLParser.StmtWithoutReturnContext):
+        # stmtWithoutReturn: (assignStmt | ifWithoutReturnStmt | forWithoutReturnStmtStmt | breakStmt | continueStmt | invokeStmt) ;
+        if ctx.assignStmt():
+            return ctx.assignStmt().accept(self)
+        elif ctx.ifWithoutReturnStmt():
+            return ctx.ifWithoutReturnStmt().accept(self)
+        elif ctx.forWithoutReturnStmt():
+            return ctx.forWithoutReturnStmtStmt().accept(self)
+        elif ctx.breakStmt():
+            return ctx.breakStmt().accept(self)
+        elif ctx.continueStmt():
+            return ctx.continueStmt().accept(self)
+        elif ctx.invokeStmt():
+            return ctx.invokeStmt().accept(self)
         
         
         
+    def visitVoidBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
+        # blockStmt: LP varDecl* stmtWithoutReturn* RP;
+        varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.varDecl(), [])
+        stmts = reduce(lambda acc, ele: acc + ele.accept(self), ctx.stmtWithoutReturn(), [])
+        return Block(varDecls, stmts)   
         
         
     def visitBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
@@ -215,16 +263,6 @@ class ASTGeneration(BKOOLVisitor):
     def visitIfStmt(self, ctx: BKOOLParser.IfStmtContext):
         # ifStmt: IF exp THEN (stmt | blockStmt) (ELSE (stmt | blockStmt))?;    
         return None
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     def visitContinueStmt(self, ctx: BKOOLParser.ContinueStmtContext):
         # continueStmt: CONTINUE S_COLON;
@@ -447,6 +485,7 @@ class ASTGeneration(BKOOLVisitor):
     def visitLiteral(self, ctx: BKOOLParser.LiteralContext):
         if ctx.INTEGER_LITERAL():
             return IntLiteral(int(ctx.INTEGER_LITERAL().getText()))
+
         
     
 

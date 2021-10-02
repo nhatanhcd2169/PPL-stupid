@@ -94,6 +94,11 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BKOOLParser#mainMethodDecl.
+    def visitMainMethodDecl(self, ctx:BKOOLParser.MainMethodDeclContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BKOOLParser#paramList.
     def visitParamList(self, ctx:BKOOLParser.ParamListContext):
         return self.visitChildren(ctx)
@@ -124,16 +129,6 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#scalarParamType.
-    def visitScalarParamType(self, ctx:BKOOLParser.ScalarParamTypeContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#compositeParamType.
-    def visitCompositeParamType(self, ctx:BKOOLParser.CompositeParamTypeContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by BKOOLParser#polyParam.
     def visitPolyParam(self, ctx:BKOOLParser.PolyParamContext):
         return self.visitChildren(ctx)
@@ -154,13 +149,18 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#constructorStmt.
-    def visitConstructorStmt(self, ctx:BKOOLParser.ConstructorStmtContext):
+    # Visit a parse tree produced by BKOOLParser#blockStmt.
+    def visitBlockStmt(self, ctx:BKOOLParser.BlockStmtContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#blockStmt.
-    def visitBlockStmt(self, ctx:BKOOLParser.BlockStmtContext):
+    # Visit a parse tree produced by BKOOLParser#stmtWithoutReturn.
+    def visitStmtWithoutReturn(self, ctx:BKOOLParser.StmtWithoutReturnContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#voidBlockStmt.
+    def visitVoidBlockStmt(self, ctx:BKOOLParser.VoidBlockStmtContext):
         return self.visitChildren(ctx)
 
 
@@ -226,6 +226,11 @@ class BKOOLVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BKOOLParser#ifStmt.
     def visitIfStmt(self, ctx:BKOOLParser.IfStmtContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#ifWithoutReturn.
+    def visitIfWithoutReturn(self, ctx:BKOOLParser.IfWithoutReturnContext):
         return self.visitChildren(ctx)
 
 

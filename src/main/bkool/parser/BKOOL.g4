@@ -43,29 +43,46 @@ objInit: objName (EQUAL_SIGN objName)?;
 
 ////////	method
 
-methodDecl: constructorDecl | normalMethodDecl;
+methodDecl: constructorDecl | normalMethodDecl | mainMethodDecl;
 
-constructorDecl: ID LB paramList? RB blockStmt;
-normalMethodDecl: (STATIC)? returnType (ID | MAIN) LB paramList? RB blockStmt;
+constructorDecl: ID LB paramList? RB voidBlockStmt;
+
+normalMethodDecl: (STATIC)? (attributeType | VOID) ID LB paramList? RB (blockStmt | voidBlockStmt);
+
+mainMethodDecl: VOID MAIN LB RB voidBlockStmt;
+
 paramList: params (S_COLON params)*;
-params: (monoParams | polyParams);
-monoParams: paramType monoParam (COMMA monoParam)*;
-polyParams: polyParam (COMMA polyParam)*;
-paramType: (scalarParamType | compositeParamType | classParamType);
+
+params: (monoParams | polyParams); // choose????
+
+monoParams: paramType monoParam (COMMA monoParam)*; // int a, b; float c
+
+polyParams: polyParam (COMMA polyParam)*; // int a; int b
+
+paramType: (attributeType | classParamType);
+
 classParamType: className;
-scalarParamType: attributeType;
-compositeParamType: scalarParamType LSB INTEGER_LITERAL RSB;
+
 polyParam: paramType monoParam;
+
 monoParam: ID;
 
+
+
 // attributeType: INT | FLOAT | STRING | BOOLEAN;
-returnType: INT | FLOAT | STRING | BOOLEAN | VOID;
+returnType: attributeType | VOID;
 
 ////	statement
 
+
+
 stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt);
-constructorStmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt) ;
 blockStmt: LP varDecl* stmt* RP;
+stmtWithoutReturn: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt) ;
+voidBlockStmt: LP varDecl* stmtWithoutReturn* RP;
+
+
+
 varDecl: (scalarVars | arrayVars | objectVars);
 objectVars: className objectVar (COMMA objectVar)* S_COLON;
 objectVar: ID;
@@ -78,8 +95,21 @@ attrAccess: instanceName DOT attrName;
 instanceName: (THIS | objName);
 objName: ID;
 attrName: (scalarVar | arrayVar);
+
+
+
+
 ifStmt: IF exp THEN (stmt | blockStmt) (ELSE (stmt | blockStmt))?;
+ifWithoutReturn: IF exp THEN (stmt | blockStmt) (ELSE (stmt | blockStmt))?;
+
+
 forStmt: FOR scalarVar ASSIGN exp (TO | DOWNTO) exp DO (stmt | blockStmt);
+
+
+
+
+
+
 invokeStmt: instanceName DOT methodInvoke S_COLON;
 arrayVar: ID indexOp;
 breakStmt: BREAK S_COLON;
