@@ -229,13 +229,18 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#ifWithoutReturn.
-    def visitIfWithoutReturn(self, ctx:BKOOLParser.IfWithoutReturnContext):
+    # Visit a parse tree produced by BKOOLParser#ifStmtWithoutReturn.
+    def visitIfStmtWithoutReturn(self, ctx:BKOOLParser.IfStmtWithoutReturnContext):
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by BKOOLParser#forStmt.
     def visitForStmt(self, ctx:BKOOLParser.ForStmtContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#forStmtWithoutReturn.
+    def visitForStmtWithoutReturn(self, ctx:BKOOLParser.ForStmtWithoutReturnContext):
         return self.visitChildren(ctx)
 
 

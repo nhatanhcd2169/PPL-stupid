@@ -3,10 +3,10 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import ArrayCell, ArrayType, AttributeDecl, Block, ClassDecl, ConstDecl, Instance, IntLiteral, MethodDecl, Static, UnaryOp, VarDecl, VoidType
+from main.bkool.utils.AST import ArrayCell, ArrayType, Assign, AttributeDecl, Block, CallStmt, ClassDecl, ConstDecl, For, Id, If, Instance, IntLiteral, MethodDecl, Static, UnaryOp, VarDecl, VoidType
 
 class ASTGeneration(BKOOLVisitor):
-
+    
     def visitProgram(self, ctx: BKOOLParser.ProgramContext):
         # program: classDecl+ EOF;
         return Program(reduce(lambda acc, ele: acc + ele.accept(self), ctx.classDecl(), []))
@@ -207,11 +207,9 @@ class ASTGeneration(BKOOLVisitor):
     
     
     
-    
-    
     # STATEMENTS #######################################################################################
     def visitStmt(self, ctx: BKOOLParser.StmtContext):
-        # stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt);
+        # stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt | blockStmt);
         if ctx.assignStmt():
             return ctx.assignStmt().accept(self)
         elif ctx.ifStmt():
@@ -226,29 +224,26 @@ class ASTGeneration(BKOOLVisitor):
             return ctx.invokeStmt().accept(self)
         elif ctx.returnStmt():
             return ctx.returnStmt().accept(self)
+        elif ctx.blockStmt():
+            return ctx.blockStmt().accept(self)
         
     def visitStmtWithoutReturn(self, ctx: BKOOLParser.StmtWithoutReturnContext):
-        # stmtWithoutReturn: (assignStmt | ifWithoutReturnStmt | forWithoutReturnStmtStmt | breakStmt | continueStmt | invokeStmt) ;
+        # stmtWithoutReturn: (assignStmt | ifStmtWithoutReturn | forStmtWithoutReturn | breakStmt | continueStmt | invokeStmt | voidBlockStmt) ;
         if ctx.assignStmt():
             return ctx.assignStmt().accept(self)
-        elif ctx.ifWithoutReturnStmt():
-            return ctx.ifWithoutReturnStmt().accept(self)
-        elif ctx.forWithoutReturnStmt():
-            return ctx.forWithoutReturnStmtStmt().accept(self)
+        elif ctx.ifStmtWithoutReturn():
+            return ctx.ifStmtWithoutReturn().accept(self)
+        elif ctx.forStmtWithoutReturn():
+            return ctx.forStmtWithoutReturn().accept(self)
         elif ctx.breakStmt():
             return ctx.breakStmt().accept(self)
         elif ctx.continueStmt():
             return ctx.continueStmt().accept(self)
         elif ctx.invokeStmt():
             return ctx.invokeStmt().accept(self)
+        elif ctx.voidBlockStmt():
+            return ctx.voidBlockStmt().accept(self)
         
-        
-        
-    def visitVoidBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
-        # blockStmt: LP varDecl* stmtWithoutReturn* RP;
-        varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.varDecl(), [])
-        stmts = reduce(lambda acc, ele: acc + ele.accept(self), ctx.stmtWithoutReturn(), [])
-        return Block(varDecls, stmts)   
         
         
     def visitBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
@@ -257,12 +252,49 @@ class ASTGeneration(BKOOLVisitor):
         stmts = reduce(lambda acc, ele: acc + ele.accept(self), ctx.stmt(), [])
         return Block(varDecls, stmts)
     
+    def visitVoidBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
+        # blockStmt: LP varDecl* stmtWithoutReturn* RP;
+        varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.varDecl(), [])
+        stmts = reduce(lambda acc, ele: acc + ele.accept(self), ctx.stmtWithoutReturn(), [])
+        return Block(varDecls, stmts)   
+    
+    def visitAssignStmt(self, ctx:BKOOLParser.AssignStmtContext):
+        # assignStmt: lhs ASSIGN exp S_COLON;
+        return [Assign(ctx.lhs().accept(self), ctx.exp().accept(self))]
+    
+    def visitLhs(self, ctx:BKOOLParser.LhsContext):
+        # lhs: (arrayVar | scalarVar | attrAccess);
+        return ctx.exp().accept(self)
+    
     def visitInvokeStmt(self, ctx: BKOOLParser.InvokeStmtContext):
-        # invokeStmt: instanceName DOT methodInvoke S_COLON;
-        return None
+        # invokeStmt: (THIS | ID) DOT ID listExp S_COLON;
+        instance = ctx.THIS().getText() if ctx.THIS() else ctx.ID(0).getText()
+        field = ctx.ID(1).getText() if ctx.THIS() else ctx.ID(0).getText()
+        return CallStmt(Id(instance), Id(field), ctx.listExp().accept(self))
+    
+    
     def visitIfStmt(self, ctx: BKOOLParser.IfStmtContext):
         # ifStmt: IF exp THEN (stmt | blockStmt) (ELSE (stmt | blockStmt))?;    
-        return None
+        return If(ctx.exp().accept(self), ctx.stmt(0).accept(self), ctx.stmt(1).accept(self) if ctx.stmt(1) else None)
+    
+    
+    def visitIfStmtWithoutReturn(self, ctx:BKOOLParser.IfStmtWithoutReturnContext):
+        # ifStmtWithoutReturn: IF exp THEN stmtWithoutReturn (ELSE stmtWithoutReturn)?;
+        return If(ctx.exp().accept(self), ctx.stmtWithoutReturn(0).accept(self), ctx.stmtWithoutReturn(1).accept(self) if ctx.stmtWithoutReturn(1) else None)
+    
+    
+    def visitForStmt(self, ctx: BKOOLParser.ForStmtContext):
+        # forStmt: FOR scalarVar ASSIGN exp (TO | DOWNTO) exp DO stmt;
+        return For(ctx.scalarVar().accept(self), ctx.exp(0).accept(self), ctx.exp(1).accept(self), True if ctx.TO() else False, ctx.stmt().accept(self))
+
+    def visitForStmtWithoutReturn(self, ctx:BKOOLParser.ForStmtWithoutReturnContext):
+        # forStmtWithoutReturn: FOR scalarVar ASSIGN exp (TO | DOWNTO) exp DO stmtWithoutReturn;
+        return For(ctx.scalarVar().accept(self), ctx.exp(0).accept(self), ctx.exp(1).accept(self), True if ctx.TO() else False, ctx.stmtWithoutReturn().accept(self))
+    
+    def visitScalarVar(self, ctx: BKOOLParser.ScalarVarContext):
+        # scalarVar: ID
+        return Id(ctx.ID().getText())
+    
     
     def visitContinueStmt(self, ctx: BKOOLParser.ContinueStmtContext):
         # continueStmt: CONTINUE S_COLON;

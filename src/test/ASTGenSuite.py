@@ -4,7 +4,7 @@ from AST import *
 
 class ASTGenSuite(unittest.TestCase):
     def test_simple_program(self):
-        """Simple program: class main {} """
+        """Simple program: class kori {} """
         input = """class kori {}"""
         expect = str(Program([ClassDecl(Id("kori"),[])]))
         self.assertTrue(TestAST.test(input,expect,300))
@@ -15,7 +15,9 @@ class ASTGenSuite(unittest.TestCase):
             kori() {}
             int count(int a; float b; string c, d, e) {}
             float[5] getFloatArray() {}
-            void main() {}
+            void main() {
+                a := 2;
+            }
         }"""
         expect = """Program([ClassDecl(Id(kori),Id(phuong),[])])"""
         self.assertTrue(TestAST.test(input,expect,301))
@@ -35,4 +37,9 @@ class ASTGenSuite(unittest.TestCase):
         """
         expect = str("hehe")
         self.assertTrue(TestAST.test(input,expect,302))
+        
+    def test_4(self):
+        input = """"""
+        expect = ""
+        self.assertTrue(TestAST.test(input,expect,303))
    

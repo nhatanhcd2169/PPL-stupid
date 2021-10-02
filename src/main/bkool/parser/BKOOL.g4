@@ -76,9 +76,14 @@ returnType: attributeType | VOID;
 
 
 
-stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt);
+// stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt);
+// blockStmt: LP varDecl* stmt* RP;
+// stmtWithoutReturn: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt) ;
+// voidBlockStmt: LP varDecl* stmtWithoutReturn* RP;
+
+stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt | blockStmt);
 blockStmt: LP varDecl* stmt* RP;
-stmtWithoutReturn: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt) ;
+stmtWithoutReturn: (assignStmt | ifStmtWithoutReturn | forStmtWithoutReturn | breakStmt | continueStmt | invokeStmt | voidBlockStmt) ;
 voidBlockStmt: LP varDecl* stmtWithoutReturn* RP;
 
 
@@ -89,8 +94,13 @@ objectVar: ID;
 scalarVars: attributeType scalarVar (COMMA scalarVar)* S_COLON;
 scalarVar: ID;
 arrayVars: attributeType LSB INTEGER_LITERAL RSB scalarVar (COMMA scalarVar)* S_COLON;
+
+
 assignStmt: lhs ASSIGN exp S_COLON;
-lhs: (arrayVar | scalarVar | attrAccess);
+
+
+// lhs: (arrayVar | scalarVar | attrAccess);
+lhs: exp;
 attrAccess: instanceName DOT attrName;
 instanceName: (THIS | objName);
 objName: ID;
@@ -99,18 +109,18 @@ attrName: (scalarVar | arrayVar);
 
 
 
-ifStmt: IF exp THEN (stmt | blockStmt) (ELSE (stmt | blockStmt))?;
-ifWithoutReturn: IF exp THEN (stmt | blockStmt) (ELSE (stmt | blockStmt))?;
+ifStmt: IF exp THEN stmt (ELSE stmt)?;
+ifStmtWithoutReturn: IF exp THEN stmtWithoutReturn (ELSE stmtWithoutReturn)?;
 
 
-forStmt: FOR scalarVar ASSIGN exp (TO | DOWNTO) exp DO (stmt | blockStmt);
+forStmt: FOR scalarVar ASSIGN exp (TO | DOWNTO) exp DO stmt;
+forStmtWithoutReturn: FOR scalarVar ASSIGN exp (TO | DOWNTO) exp DO stmtWithoutReturn;
 
 
 
 
 
-
-invokeStmt: instanceName DOT methodInvoke S_COLON;
+invokeStmt: (THIS | ID) DOT ID listExp S_COLON;
 arrayVar: ID indexOp;
 breakStmt: BREAK S_COLON;
 continueStmt: CONTINUE S_COLON;
