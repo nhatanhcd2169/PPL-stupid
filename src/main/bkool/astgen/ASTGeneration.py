@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import ArrayCell, ArrayType, Assign, AttributeDecl, Block, CallStmt, ClassDecl, ConstDecl, For, Id, If, Instance, IntLiteral, MethodDecl, Static, UnaryOp, VarDecl, VoidType
+from main.bkool.utils.AST import ArrayCell, ArrayType, Assign, AttributeDecl, Block, Break, CallStmt, ClassDecl, ConstDecl, Continue, For, Id, If, Instance, IntLiteral, MethodDecl, Return, Static, UnaryOp, VarDecl, VoidType
 
 class ASTGeneration(BKOOLVisitor):
     
@@ -49,7 +49,6 @@ class ASTGeneration(BKOOLVisitor):
     def visitMutableAttrAssign(self, ctx: BKOOLParser.MutableAttrAssignContext):
         # mutableAttrAssign: (EQUAL_SIGN exp)?;
         return ctx.exp().accept(self) if ctx.exp() else None
-    
     
     def visitImmutableAttrAssign(self, ctx: BKOOLParser.ImmutableAttrAssignContext):
         # immutableAttrAssign: (EQUAL_SIGN exp);
@@ -248,19 +247,19 @@ class ASTGeneration(BKOOLVisitor):
         
     def visitBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
         # blockStmt: LP varDecl* stmt* RP;
-        varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.varDecl(), [])
-        stmts = reduce(lambda acc, ele: acc + ele.accept(self), ctx.stmt(), [])
+        varDecls = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.varDecl(), [])
+        stmts = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.stmt(), [])
         return Block(varDecls, stmts)
     
     def visitVoidBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
         # blockStmt: LP varDecl* stmtWithoutReturn* RP;
-        varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.varDecl(), [])
-        stmts = reduce(lambda acc, ele: acc + ele.accept(self), ctx.stmtWithoutReturn(), [])
+        varDecls = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.varDecl(), [])
+        stmts = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.stmtWithoutReturn(), [])
         return Block(varDecls, stmts)   
     
     def visitAssignStmt(self, ctx:BKOOLParser.AssignStmtContext):
         # assignStmt: lhs ASSIGN exp S_COLON;
-        return [Assign(ctx.lhs().accept(self), ctx.exp().accept(self))]
+        return Assign(ctx.lhs().accept(self), ctx.exp().accept(self))
     
     def visitLhs(self, ctx:BKOOLParser.LhsContext):
         # lhs: (arrayVar | scalarVar | attrAccess);
@@ -268,8 +267,12 @@ class ASTGeneration(BKOOLVisitor):
     
     def visitInvokeStmt(self, ctx: BKOOLParser.InvokeStmtContext):
         # invokeStmt: (THIS | ID) DOT ID listExp S_COLON;
-        instance = ctx.THIS().getText() if ctx.THIS() else ctx.ID(0).getText()
-        field = ctx.ID(1).getText() if ctx.THIS() else ctx.ID(0).getText()
+        if ctx.THIS():
+            instance = ctx.THIS().getText() if ctx.THIS() else ctx.ID(0).getText()
+            field = ctx.ID(0).getText() if not ctx.THIS() else ctx.ID(1).getText()
+        else:
+            instance = ctx.ID(0).getText()
+            field = ctx.ID(1).getText()
         return CallStmt(Id(instance), Id(field), ctx.listExp().accept(self))
     
     

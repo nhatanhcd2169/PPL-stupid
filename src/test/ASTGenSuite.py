@@ -17,6 +17,19 @@ class ASTGenSuite(unittest.TestCase):
             float[5] getFloatArray() {}
             void main() {
                 a := 2;
+                a.b.c.d.e := 5;
+                for x := 5 to 10 do
+                    x := x + 5;
+            }
+            int okay() {
+                a := 2;
+                a.b.c.d.e := 5;
+                for x := 5 to 10 do
+                {
+                    break;
+                    continue;
+                    return (x < 5);
+                }
             }
         }"""
         expect = """Program([ClassDecl(Id(kori),Id(phuong),[])])"""
