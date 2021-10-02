@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import ArrayCell, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, Break, CallStmt, ClassDecl, ConstDecl, Continue, FieldAccess, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, Program, Return, Static, StringType, UnaryOp, VarDecl, VoidType
+from main.bkool.utils.AST import ArrayCell, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, BooleanLiteral, Break, CallStmt, ClassDecl, ConstDecl, Continue, FieldAccess, FloatLiteral, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, Program, Return, Static, StringLiteral, StringType, UnaryOp, VarDecl, VoidType
 
 class ASTGeneration(BKOOLVisitor):
     
@@ -511,9 +511,19 @@ class ASTGeneration(BKOOLVisitor):
         return reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.exp()[1:], [ctx.exp(0).accept(self)])
     
     def visitLiteral(self, ctx: BKOOLParser.LiteralContext):
+        # literal:	(INTEGER_LITERAL|FLOAT_LITERAL|bool_literal|STRING_LITERAL);
         if ctx.INTEGER_LITERAL():
             return IntLiteral(int(ctx.INTEGER_LITERAL().getText()))
-
+        elif ctx.FLOAT_LITERAL():
+            return FloatLiteral(float(ctx.FLOAT_LITERAL().getText()))
+        elif ctx.bool_literal():
+            return ctx.bool_literal().accept(self)
+        else:
+            return StringLiteral(ctx.STRING_LITERAL().getText())
+        
+    def visitBool_literal(self, ctx: BKOOLParser.Bool_literalContext):
+        value = ctx.TRUE().getText() if ctx.TRUE() else ctx.FALSE().getText()
+        return BooleanLiteral(bool(value))
         
     
 

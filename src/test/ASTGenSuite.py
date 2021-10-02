@@ -49,7 +49,7 @@ class ASTGenSuite(unittest.TestCase):
             static final int x = 123, y = 5;
             int abc = !b;
             string x = y ^ "ok";
-            int s = new Shape(a, b, 12, 25, 232525223);
+            int s = new Shape(a, b, 12, 25, 232525223, 2.12314, false, "kori  phuonggggggg");
         }
         class phuong extends kori {}        
         """
