@@ -102,3 +102,12 @@ class ASTGenSuite(unittest.TestCase):
             }"""
         expect = """"""
         self.assertTrue(TestAST.test(input,expect,306))
+        
+    def test_8(self):
+        input = """class a extends b {
+                    void main() {
+                        this.suck("123");
+                    }
+            }"""
+        expect = """"""
+        self.assertTrue(TestAST.test(input,expect,307))

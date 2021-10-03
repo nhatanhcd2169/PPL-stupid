@@ -114,9 +114,7 @@ forStmtWithoutReturn: FOR scalarVar ASSIGN exp (TO | DOWNTO) exp DO stmtWithoutR
 
 
 
-
-
-invokeStmt: (THIS | ID) DOT ID listExp S_COLON;
+invokeStmt: exp DOT ID listExp S_COLON;
 arrayVar: ID indexOp;
 breakStmt: BREAK S_COLON;
 continueStmt: CONTINUE S_COLON;

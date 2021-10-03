@@ -209,14 +209,15 @@ class ASTGeneration(BKOOLVisitor):
         return ctx.exp().accept(self)
     
     def visitInvokeStmt(self, ctx: BKOOLParser.InvokeStmtContext):
-        # invokeStmt: (THIS | ID) DOT ID listExp S_COLON;
-        if ctx.THIS():
-            instance = ctx.THIS().getText() if ctx.THIS() else ctx.ID(0).getText()
-            field = ctx.ID(0).getText() if not ctx.THIS() else ctx.ID(1).getText()
-        else:
-            instance = ctx.ID(0).getText()
-            field = ctx.ID(1).getText()
-        return CallStmt(Id(instance), Id(field), ctx.listExp().accept(self))
+        # invokeStmt: exp DOT ID listExp S_COLON;
+        # if ctx.THIS():
+        #     instance = ctx.THIS().getText()
+        #     field = ctx.ID(0).getText()
+        # else:
+        #     instance = ctx.ID(0).getText()
+        #     field = ctx.ID(1).getText()
+        # return CallStmt(Id(instance), Id(field), ctx.listExp().accept(self))
+        return CallStmt(ctx.exp().accept(self), Id(ctx.ID().getText()), ctx.listExp().accept(self))
     
     def visitIfStmt(self, ctx: BKOOLParser.IfStmtContext):
         # ifStmt: IF exp THEN stmt (ELSE stmt)?; 
