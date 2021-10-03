@@ -39,6 +39,11 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BKOOLParser#mutableObjAttrDecl.
+    def visitMutableObjAttrDecl(self, ctx:BKOOLParser.MutableObjAttrDeclContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BKOOLParser#immutableAttrAssign.
     def visitImmutableAttrAssign(self, ctx:BKOOLParser.ImmutableAttrAssignContext):
         return self.visitChildren(ctx)
@@ -46,6 +51,11 @@ class BKOOLVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BKOOLParser#mutableAttrAssign.
     def visitMutableAttrAssign(self, ctx:BKOOLParser.MutableAttrAssignContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#mutableObjAttrAssign.
+    def visitMutableObjAttrAssign(self, ctx:BKOOLParser.MutableObjAttrAssignContext):
         return self.visitChildren(ctx)
 
 
@@ -64,21 +74,6 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#objectDecl.
-    def visitObjectDecl(self, ctx:BKOOLParser.ObjectDeclContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#objList.
-    def visitObjList(self, ctx:BKOOLParser.ObjListContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#objInit.
-    def visitObjInit(self, ctx:BKOOLParser.ObjInitContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by BKOOLParser#methodDecl.
     def visitMethodDecl(self, ctx:BKOOLParser.MethodDeclContext):
         return self.visitChildren(ctx)
@@ -89,13 +84,13 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#normalVoidMethodDecl.
-    def visitNormalVoidMethodDecl(self, ctx:BKOOLParser.NormalVoidMethodDeclContext):
+    # Visit a parse tree produced by BKOOLParser#normalMethodDecl.
+    def visitNormalMethodDecl(self, ctx:BKOOLParser.NormalMethodDeclContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#normalMethodDecl.
-    def visitNormalMethodDecl(self, ctx:BKOOLParser.NormalMethodDeclContext):
+    # Visit a parse tree produced by BKOOLParser#normalVoidMethodDecl.
+    def visitNormalVoidMethodDecl(self, ctx:BKOOLParser.NormalVoidMethodDeclContext):
         return self.visitChildren(ctx)
 
 

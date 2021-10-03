@@ -67,7 +67,7 @@ class ASTGenSuite(unittest.TestCase):
                     int cacbu;
                     void kori() 
                     {
-                        b := this.suck(tits.leftTit, tit.rightTit);
+                        b := this.call(leftRecursive, rightRecursive);
                     }
                     void main() {
                         for x := 1 downto -1 do
@@ -92,4 +92,13 @@ class ASTGenSuite(unittest.TestCase):
                     final static int a = 1, b = 2, c = 3;
             }"""
         expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Static,VarDecl(Id(a),IntType)),AttributeDecl(Static,VarDecl(Id(b),IntType,IntLit(5))),AttributeDecl(Static,VarDecl(Id(c),IntType,IntLit(66))),AttributeDecl(Static,VarDecl(Id(d),IntType)),AttributeDecl(Static,VarDecl(Id(e),IntType)),AttributeDecl(Static,VarDecl(Id(f),IntType,IntLit(77))),AttributeDecl(Static,VarDecl(Id(g),IntType,IntLit(8))),AttributeDecl(Static,ConstDecl(Id(a),IntType,IntLit(1))),AttributeDecl(Static,ConstDecl(Id(b),IntType,IntLit(2))),AttributeDecl(Static,ConstDecl(Id(c),IntType,IntLit(3)))])])"""
+        self.assertTrue(TestAST.test(input,expect,306))
+        
+    def test_7(self):
+        input = """class a extends b {
+                    Shape s;
+                    Shape c = new Shape(15);
+                    Shape d = c;
+            }"""
+        expect = """"""
         self.assertTrue(TestAST.test(input,expect,306))

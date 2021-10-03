@@ -17,29 +17,26 @@ program: classDecl+ EOF;
 ////	class
 
 classDecl: CLASS ID (EXTENDS ID)? LP memDecl* RP;
-memDecl: attributeDecl | objectDecl | methodDecl;
+memDecl: attributeDecl | methodDecl;
 
 ////////	attribute
 
 // attributeDecl: (FINAL | FINAL STATIC | STATIC | STATIC FINAL)? attributeType (ID attributeAssign) (COMMA (ID attributeAssign))* S_COLON;
 // attributeAssign: (EQUAL_SIGN exp)?;
 
-attributeDecl: immutableAttrDecl | mutableAttrDecl;
+attributeDecl: immutableAttrDecl | mutableAttrDecl | mutableObjAttrDecl;
 immutableAttrDecl: (FINAL | FINAL STATIC | STATIC FINAL) attributeType (ID immutableAttrAssign) (COMMA (ID immutableAttrAssign))* S_COLON;
 mutableAttrDecl: (STATIC)? attributeType (ID mutableAttrAssign) (COMMA (ID mutableAttrAssign))* S_COLON;
-
+mutableObjAttrDecl:  (STATIC)? ID (ID mutableObjAttrAssign) (COMMA (ID mutableObjAttrAssign))* S_COLON;
 immutableAttrAssign: (EQUAL_SIGN exp);
 mutableAttrAssign: (EQUAL_SIGN exp)?;
-
+mutableObjAttrAssign: (EQUAL_SIGN exp10)?;
 attributeType: compositeType | scalarType;
 scalarType: INT | FLOAT | STRING | BOOLEAN;
 compositeType: scalarType LSB INTEGER_LITERAL RSB;
 
 
 ////////	OBJECT
-objectDecl: (FINAL | STATIC | (FINAL STATIC) | (STATIC FINAL))? className objList S_COLON;
-objList: objInit (COMMA objInit)*;
-objInit: objName (EQUAL_SIGN objName)?;
 
 ////////	method
 
@@ -49,9 +46,9 @@ constructorDecl: ID LB paramList? RB voidBlockStmt;
 
 // normalMethodDecl: (STATIC)? (attributeType | VOID) ID LB paramList? RB (blockStmt | voidBlockStmt);
 
-normalVoidMethodDecl: (STATIC)? VOID ID LB paramList? RB voidBlockStmt;
-
 normalMethodDecl: (STATIC)? attributeType ID LB paramList? RB blockStmt;
+
+normalVoidMethodDecl: (STATIC)? VOID ID LB paramList? RB voidBlockStmt;
 
 mainMethodDecl: VOID MAIN LB RB voidBlockStmt;
 
@@ -78,8 +75,6 @@ returnType: attributeType | VOID;
 
 ////	statement
 
-
-
 // stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt);
 // blockStmt: LP varDecl* stmt* RP;
 // stmtWithoutReturn: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt) ;
@@ -105,12 +100,11 @@ assignStmt: lhs ASSIGN exp S_COLON;
 
 // lhs: (arrayVar | scalarVar | attrAccess);
 lhs: exp;
+
 attrAccess: instanceName DOT attrName;
 instanceName: (THIS | objName);
 objName: ID;
 attrName: (scalarVar | arrayVar);
-
-
 
 
 ifStmt: IF exp THEN stmt (ELSE stmt)?;
