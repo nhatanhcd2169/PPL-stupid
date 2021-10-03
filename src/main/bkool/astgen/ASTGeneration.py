@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import CallExpr, SelfLiteral, ArrayCell, ArrayLiteral, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, BooleanLiteral, Break, CallStmt, ClassDecl, ClassType, ConstDecl, Continue, FieldAccess, FloatLiteral, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, NullLiteral, Program, Return, Static, StringLiteral, StringType, UnaryOp, VarDecl, VoidType
+# from main.bkool.utils.AST import CallExpr, SelfLiteral, ArrayCell, ArrayLiteral, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, BooleanLiteral, Break, CallStmt, ClassDecl, ClassType, ConstDecl, Continue, FieldAccess, FloatLiteral, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, NullLiteral, Program, Return, Static, StringLiteral, StringType, UnaryOp, VarDecl, VoidType
 
 class ASTGeneration(BKOOLVisitor):
     
