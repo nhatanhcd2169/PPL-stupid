@@ -25,12 +25,14 @@ memDecl: attributeDecl | methodDecl;
 // attributeAssign: (EQUAL_SIGN exp)?;
 
 attributeDecl: immutableAttrDecl | mutableAttrDecl | mutableObjAttrDecl;
-immutableAttrDecl: (FINAL | FINAL STATIC | STATIC FINAL) attributeType (ID immutableAttrAssign) (COMMA (ID immutableAttrAssign))* S_COLON;
-mutableAttrDecl: (STATIC)? attributeType (ID mutableAttrAssign) (COMMA (ID mutableAttrAssign))* S_COLON;
-mutableObjAttrDecl:  (STATIC)? ID (ID mutableObjAttrAssign) (COMMA (ID mutableObjAttrAssign))* S_COLON;
-immutableAttrAssign: (EQUAL_SIGN exp);
-mutableAttrAssign: (EQUAL_SIGN exp)?;
-mutableObjAttrAssign: (EQUAL_SIGN exp10)?;
+immutableAttrDecl: (FINAL | FINAL STATIC | STATIC FINAL) attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
+mutableAttrDecl: (STATIC)? attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
+mutableObjAttrDecl:  (STATIC)? ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
+
+immutableInitialize: (EQUAL_SIGN exp);
+mutableInitialize: (EQUAL_SIGN exp)?;
+mutableObjInitialize: (EQUAL_SIGN exp10)?;
+
 attributeType: compositeType | scalarType;
 scalarType: INT | FLOAT | STRING | BOOLEAN;
 compositeType: scalarType LSB INTEGER_LITERAL RSB;
@@ -86,6 +88,12 @@ voidBlockStmt: LP varDecl* stmtWithoutReturn* RP;
 
 
 varDecl: (scalarVars | arrayVars | objectVars);
+
+immutableVarDecl: FINAL? attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
+mutableVarDecl: attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
+mutableObjVarDecl: ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
+
+
 objectVars: className objectVar (COMMA objectVar)* S_COLON;
 objectVar: ID;
 scalarVars: attributeType scalarVar (COMMA scalarVar)* S_COLON;

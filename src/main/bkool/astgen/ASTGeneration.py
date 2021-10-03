@@ -34,39 +34,39 @@ class ASTGeneration(BKOOLVisitor):
             return ctx.mutableObjAttrDecl().accept(self)
                
     def visitImmutableAttrDecl(self, ctx: BKOOLParser.ImmutableAttrDeclContext):
-        # immutableAttrDecl: (FINAL | FINAL STATIC | STATIC FINAL) attributeType (ID immutableAttrAssign) (COMMA (ID immutableAttrAssign))* S_COLON;
+        # immutableAttrDecl: (FINAL | FINAL STATIC | STATIC FINAL) attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
         kind = Instance() if (not ctx.STATIC()) else Static()
         type = ctx.attributeType().accept(self)
         def mapImmutable(id, expr):
             return AttributeDecl(kind, ConstDecl(Id(id.getText()), type, expr.accept(self)))
-        return list(map(mapImmutable, ctx.ID(), ctx.immutableAttrAssign()))
+        return list(map(mapImmutable, ctx.ID(), ctx.immutableInitialize()))
     
     def visitMutableAttrDecl(self, ctx: BKOOLParser.MutableAttrDeclContext):
-        # mutableAttrDecl: (STATIC)? attributeType (ID mutableAttrAssign) (COMMA (ID mutableAttrAssign))* S_COLON;
+        # mutableAttrDecl: (STATIC)? attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
         kind = Instance() if (not ctx.STATIC()) else Static()
         type = ctx.attributeType().accept(self)
         def mapMutable(id, expr):
             return AttributeDecl(kind, VarDecl(Id(id.getText()), type, expr.accept(self)))
-        return list(map(mapMutable, ctx.ID(), ctx.mutableAttrAssign()))
+        return list(map(mapMutable, ctx.ID(), ctx.mutableInitialize()))
 
     def visitMutableObjAttrDecl(self, ctx: BKOOLParser.MutableAttrDeclContext):
-        # mutableObjAttrDecl: (STATIC)? ID (ID mutableObjAttrAssign) (COMMA (ID mutableObjAttrAssign))* S_COLON;
+        # mutableObjAttrDecl: (STATIC)? ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
         kind = Instance() if (not ctx.STATIC()) else Static()
         type = ClassType(Id(ctx.ID(0).getText()))
         def mapMutable(id, expr):
             return AttributeDecl(kind, VarDecl(Id(id.getText()), type, expr.accept(self)))
-        return list(map(mapMutable, ctx.ID()[1:], ctx.mutableObjAttrAssign()))
+        return list(map(mapMutable, ctx.ID()[1:], ctx.mutableObjInitialize()))
     
-    def visitMutableAttrAssign(self, ctx: BKOOLParser.MutableAttrAssignContext):
-        # mutableAttrAssign: (EQUAL_SIGN exp)?;
+    def visitMutableInitialize(self, ctx: BKOOLParser.MutableInitializeContext):
+        # mutableInitialize: (EQUAL_SIGN exp)?;
         return ctx.exp().accept(self) if ctx.exp() else None
     
-    def visitMutableObjAttrAssign(self, ctx: BKOOLParser.MutableAttrAssignContext):
-        # mutableObjAttrAssign: (EQUAL_SIGN exp10)?;
+    def visitMutableObjInitialize(self, ctx: BKOOLParser.MutableInitializeContext):
+        # mutableObjInitialize: (EQUAL_SIGN exp10)?;
         return ctx.exp10().accept(self) if ctx.exp10() else NullLiteral()
     
-    def visitImmutableAttrAssign(self, ctx: BKOOLParser.ImmutableAttrAssignContext):
-        # immutableAttrAssign: (EQUAL_SIGN exp);
+    def visitImmutableInitialize(self, ctx: BKOOLParser.ImmutableInitializeContext):
+        # immutableInitialize: (EQUAL_SIGN exp);
         return ctx.exp().accept(self)
     
     def visitAttributeType(self, ctx: BKOOLParser.AttributeTypeContext):

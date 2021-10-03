@@ -44,18 +44,18 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#immutableAttrAssign.
-    def visitImmutableAttrAssign(self, ctx:BKOOLParser.ImmutableAttrAssignContext):
+    # Visit a parse tree produced by BKOOLParser#immutableInitialize.
+    def visitImmutableInitialize(self, ctx:BKOOLParser.ImmutableInitializeContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#mutableAttrAssign.
-    def visitMutableAttrAssign(self, ctx:BKOOLParser.MutableAttrAssignContext):
+    # Visit a parse tree produced by BKOOLParser#mutableInitialize.
+    def visitMutableInitialize(self, ctx:BKOOLParser.MutableInitializeContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#mutableObjAttrAssign.
-    def visitMutableObjAttrAssign(self, ctx:BKOOLParser.MutableObjAttrAssignContext):
+    # Visit a parse tree produced by BKOOLParser#mutableObjInitialize.
+    def visitMutableObjInitialize(self, ctx:BKOOLParser.MutableObjInitializeContext):
         return self.visitChildren(ctx)
 
 
@@ -166,6 +166,21 @@ class BKOOLVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BKOOLParser#varDecl.
     def visitVarDecl(self, ctx:BKOOLParser.VarDeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#immutableVarDecl.
+    def visitImmutableVarDecl(self, ctx:BKOOLParser.ImmutableVarDeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#mutableVarDecl.
+    def visitMutableVarDecl(self, ctx:BKOOLParser.MutableVarDeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#mutableObjVarDecl.
+    def visitMutableObjVarDecl(self, ctx:BKOOLParser.MutableObjVarDeclContext):
         return self.visitChildren(ctx)
 
 

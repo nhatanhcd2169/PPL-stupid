@@ -5,7 +5,7 @@ from AST import *
 class ASTGenSuite(unittest.TestCase):
     def test_1(self):
         input = """class kori {}"""
-        expect = str(Program([ClassDecl(Id("kori"),[])]))
+        expect = """Program([ClassDecl(Id(kori),[])])"""
         self.assertTrue(TestAST.test(input,expect,300))
 
     def test_2(self):
@@ -32,7 +32,7 @@ class ASTGenSuite(unittest.TestCase):
                 }
             }
         }"""
-        expect = """Program([ClassDecl(Id(kori),Id(phuong),[])])"""
+        expect = """Program([ClassDecl(Id(kori),Id(phuong),[MethodDecl(Id(<init>),Instance,[],VoidType,Block([],[])),MethodDecl(Id(count),Instance,[param(Id(a),IntType),param(Id(b),ClassType(Shape)),param(Id(c),StringType),param(Id(d),StringType),param(Id(e),StringType)],IntType,Block([],[])),MethodDecl(Id(getFloatArray),Instance,[],ArrayType(IntLit(5),FloatType),Block([],[])),MethodDecl(Id(main),Static,[],VoidType,Block([],[AssignStmt(Id(a),IntLit(2)),AssignStmt(FieldAccess(FieldAccess(FieldAccess(FieldAccess(Id(a),Id(b)),Id(c)),Id(d)),Id(e)),IntLit(5)),For(Id(x),IntLit(5),IntLit(10),True,AssignStmt(Id(x),BinaryOp(+,Id(x),IntLit(5)))])])),MethodDecl(Id(okay),Instance,[],IntType,Block([],[AssignStmt(Id(a),IntLit(2)),AssignStmt(FieldAccess(FieldAccess(FieldAccess(FieldAccess(Id(a),Id(b)),Id(c)),Id(d)),Id(e)),IntLit(5)),For(Id(x),IntLit(5),IntLit(10),True,Block([],[Break,If(BinaryOp(==,BinaryOp(+,Id(a),Id(b)),IntLit(5)),AssignStmt(Id(a),Id(b))),Continue,Return(BinaryOp(<,Id(x),IntLit(5)))])])]))])])"""
         self.assertTrue(TestAST.test(input,expect,301))
     
     def test_3(self):
@@ -51,14 +51,14 @@ class ASTGenSuite(unittest.TestCase):
         }
         class phuong extends kori {}        
         """
-        expect = str("hehe")
+        expect = """Program([ClassDecl(Id(kori),Id(phuong),[AttributeDecl(Instance,VarDecl(Id(phuongggggg),IntType)),AttributeDecl(Instance,VarDecl(Id(uwu),ArrayType(IntLit(5),FloatType),[IntLit(1),IntLit(2),IntLit(3),FloatLit(4.5),StringLit(concu)])),AttributeDecl(Instance,ConstDecl(Id(x),FloatType,IntLit(7))),AttributeDecl(Static,VarDecl(Id(y),FloatType)),AttributeDecl(Static,ConstDecl(Id(x),FloatType,BinaryOp(+,BinaryOp(*,IntLit(4),IntLit(5)),BinaryOp(*,BinaryOp(/,IntLit(7),IntLit(3)),ArrayCell(Id(a),IntLit(5)))))),AttributeDecl(Static,ConstDecl(Id(y),FloatType,IntLit(3))),AttributeDecl(Static,ConstDecl(Id(x),IntType,IntLit(123))),AttributeDecl(Static,ConstDecl(Id(y),IntType,IntLit(5))),AttributeDecl(Instance,VarDecl(Id(abc),IntType,UnaryOp(!,Id(b)))),AttributeDecl(Instance,VarDecl(Id(x),StringType,BinaryOp(^,Id(y),StringLit(ok)))),AttributeDecl(Instance,VarDecl(Id(s),IntType,NewExpr(Id(Shape),[Id(a),Id(b),IntLit(12),IntLit(25),IntLit(232525223),FloatLit(2.12314),BooleanLit(True),StringLit(kori  phuonggggggg)])))]),ClassDecl(Id(phuong),Id(kori),[])])"""
         self.assertTrue(TestAST.test(input,expect,302))
         
     def test_4(self):
         input = """class a extends b {
-                int s = new Shape(a, !b, 12, 25, -2.12314 \ c % 789138712841 + 5, false, "kori  phuonggggggg" ^ "hola", id, (this.pos[14/2+5*7] + 1 / 5));
+                Shape s = new Shape(a, !b, 12, 25, -2.12314 \ c % 789138712841 + 5, false, "kori  phuonggggggg" ^ "hola", id, (this.pos[14/2+5*7] + 1 / 5));
             }"""
-        expect = ""
+        expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Instance,VarDecl(Id(s),ClassType(Id(Shape)),NewExpr(Id(Shape),[Id(a),UnaryOp(!,Id(b)),IntLit(12),IntLit(25),BinaryOp(+,BinaryOp(%,BinaryOp(\,UnaryOp(-,FloatLit(2.12314)),Id(c)),IntLit(789138712841)),IntLit(5)),BooleanLit(True),BinaryOp(^,StringLit(kori  phuonggggggg),StringLit(hola)),Id(id),BinaryOp(+,ArrayCell(FieldAccess(this,Id(pos)),BinaryOp(+,BinaryOp(/,IntLit(14),IntLit(2)),BinaryOp(*,IntLit(5),IntLit(7)))),BinaryOp(/,IntLit(1),IntLit(5)))])))])])"""
         self.assertTrue(TestAST.test(input,expect,303))
         
     def test_5(self):
@@ -67,6 +67,7 @@ class ASTGenSuite(unittest.TestCase):
                     int cacbu;
                     void kori() 
                     {
+                        int x;
                         b := this.call(leftRecursive, rightRecursive);
                     }
                     void main() {
@@ -76,14 +77,14 @@ class ASTGenSuite(unittest.TestCase):
                         }
                     }
             }"""
-        expect = ""
+        expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Instance,ConstDecl(Id(c),IntType,BinaryOp(!=,Id(daaaaaa),IntLit(5)))),AttributeDecl(Instance,VarDecl(Id(cacbu),IntType)),MethodDecl(Id(kori),Instance,[],VoidType,Block([None],[AssignStmt(Id(b),Call(this,Id(call),[Id(leftRecursive),Id(rightRecursive)]))])),MethodDecl(Id(main),Static,[],VoidType,Block([],[For(Id(x),IntLit(1),UnaryOp(-,IntLit(1)),False,Block([],[AssignStmt(Id(x),BinaryOp(+,Id(x),IntLit(5)))])])]))])])"""
         self.assertTrue(TestAST.test(input,expect,304))
         
     def test_6(self):
         input = """class a extends b {
                     int c = this.ok().not_ok.very_ok().wtf.nah.mam_tom / 2 \ 5;
             }"""
-        expect = ""
+        expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Instance,VarDecl(Id(c),IntType,BinaryOp(\,BinaryOp(/,FieldAccess(FieldAccess(FieldAccess(Call(FieldAccess(Call(this,Id(ok),[]),Id(not_ok)),Id(very_ok),[]),Id(wtf)),Id(nah)),Id(mam_tom)),IntLit(2)),IntLit(5))))])])"""
         self.assertTrue(TestAST.test(input,expect,305))
         
     def test_7(self):
@@ -94,20 +95,20 @@ class ASTGenSuite(unittest.TestCase):
         expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Static,VarDecl(Id(a),IntType)),AttributeDecl(Static,VarDecl(Id(b),IntType,IntLit(5))),AttributeDecl(Static,VarDecl(Id(c),IntType,IntLit(66))),AttributeDecl(Static,VarDecl(Id(d),IntType)),AttributeDecl(Static,VarDecl(Id(e),IntType)),AttributeDecl(Static,VarDecl(Id(f),IntType,IntLit(77))),AttributeDecl(Static,VarDecl(Id(g),IntType,IntLit(8))),AttributeDecl(Static,ConstDecl(Id(a),IntType,IntLit(1))),AttributeDecl(Static,ConstDecl(Id(b),IntType,IntLit(2))),AttributeDecl(Static,ConstDecl(Id(c),IntType,IntLit(3)))])])"""
         self.assertTrue(TestAST.test(input,expect,306))
         
-    def test_7(self):
+    def test_8(self):
         input = """class a extends b {
                     Shape s;
                     Shape c = new Shape(15);
                     Shape d = c;
             }"""
-        expect = """"""
-        self.assertTrue(TestAST.test(input,expect,306))
+        expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Instance,VarDecl(Id(s),ClassType(Id(Shape)),NullLiteral())),AttributeDecl(Instance,VarDecl(Id(c),ClassType(Id(Shape)),NewExpr(Id(Shape),[IntLit(15)]))),AttributeDecl(Instance,VarDecl(Id(d),ClassType(Id(Shape)),Id(c)))])])"""
+        self.assertTrue(TestAST.test(input,expect,307))
         
-    def test_8(self):
+    def test_9(self):
         input = """class a extends b {
                     void main() {
                         this.suck("123");
                     }
             }"""
-        expect = """"""
-        self.assertTrue(TestAST.test(input,expect,307))
+        expect = """Program([ClassDecl(Id(a),Id(b),[MethodDecl(Id(main),Static,[],VoidType,Block([],[Call(this,Id(suck),[StringLit(123)])]))])])"""
+        self.assertTrue(TestAST.test(input,expect,308))
