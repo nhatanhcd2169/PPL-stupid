@@ -151,6 +151,13 @@ class ASTGeneration(BKOOLVisitor):
         # monoParam: ID
         return Id(ctx.ID().getText())
     
+    def visitParamType(self, ctx: BKOOLParser.ParamTypeContext):
+        # paramType: (attributeType | classParamType);
+        return ctx.attributeType().accept(self) if ctx.attributeType() else ctx.classParamType().accept(self)
+    
+    def visitClassParamType(self, ctx:BKOOLParser.ClassParamTypeContext):
+        return ctx.className().accept(self)
+    
     # STATEMENTS #######################################################################################
     def visitStmt(self, ctx: BKOOLParser.StmtContext):
         # stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt | blockStmt);
@@ -210,13 +217,6 @@ class ASTGeneration(BKOOLVisitor):
     
     def visitInvokeStmt(self, ctx: BKOOLParser.InvokeStmtContext):
         # invokeStmt: exp DOT ID listExp S_COLON;
-        # if ctx.THIS():
-        #     instance = ctx.THIS().getText()
-        #     field = ctx.ID(0).getText()
-        # else:
-        #     instance = ctx.ID(0).getText()
-        #     field = ctx.ID(1).getText()
-        # return CallStmt(Id(instance), Id(field), ctx.listExp().accept(self))
         return CallStmt(ctx.exp().accept(self), Id(ctx.ID().getText()), ctx.listExp().accept(self))
     
     def visitIfStmt(self, ctx: BKOOLParser.IfStmtContext):
@@ -405,3 +405,8 @@ class ASTGeneration(BKOOLVisitor):
     def visitBool_literal(self, ctx: BKOOLParser.Bool_literalContext):
         value = ctx.TRUE().getText() if ctx.TRUE() else ctx.FALSE().getText()
         return BooleanLiteral(bool(value))
+    
+    
+    
+    def visitClassName(self, ctx:BKOOLParser.ClassNameContext):
+        return ClassType(ctx.ID().getText())

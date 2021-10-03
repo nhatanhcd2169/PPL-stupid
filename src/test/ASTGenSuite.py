@@ -11,7 +11,7 @@ class ASTGenSuite(unittest.TestCase):
     def test_2(self):
         input = """class kori extends phuong {
             kori() {}
-            int count(int a; float b; string c, d, e) {}
+            int count(int a; Shape b; string c, d, e) {}
             float[5] getFloatArray() {}
             void main() {
                 a := 2;
