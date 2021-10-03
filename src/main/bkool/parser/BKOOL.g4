@@ -43,11 +43,15 @@ objInit: objName (EQUAL_SIGN objName)?;
 
 ////////	method
 
-methodDecl: constructorDecl | normalMethodDecl | mainMethodDecl;
+methodDecl: constructorDecl | normalMethodDecl | mainMethodDecl | normalVoidMethodDecl;
 
 constructorDecl: ID LB paramList? RB voidBlockStmt;
 
-normalMethodDecl: (STATIC)? (attributeType | VOID) ID LB paramList? RB (blockStmt | voidBlockStmt);
+// normalMethodDecl: (STATIC)? (attributeType | VOID) ID LB paramList? RB (blockStmt | voidBlockStmt);
+
+normalVoidMethodDecl: (STATIC)? VOID ID LB paramList? RB voidBlockStmt;
+
+normalMethodDecl: (STATIC)? attributeType ID LB paramList? RB blockStmt;
 
 mainMethodDecl: VOID MAIN LB RB voidBlockStmt;
 
@@ -138,7 +142,7 @@ exp5: exp5 CONCATENATE exp6 | exp6;
 exp6: NOT exp6 | exp7;
 exp7: adding exp7 | exp8;
 exp8: exp8 indexOp | exp9;
-exp9: exp9 DOT exp10 | exp10;
+exp9: exp9 DOT exp10 listExp? | exp10;
 exp10: NEW exp10 listExp | exp11;
 exp11: LB exp RB| literal | ID | methodInvoke | THIS;
 

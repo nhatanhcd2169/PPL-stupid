@@ -135,6 +135,8 @@ class ASTGeneration(BKOOLVisitor):
             return ctx.constructorDecl().accept(self)
         elif ctx.normalMethodDecl():
             return ctx.normalMethodDecl().accept(self)
+        elif ctx.normalVoidMethodDecl():
+            return ctx.normalVoidMethodDecl().accept(self)
         else:
             return ctx.mainMethodDecl().accept(self)
 
@@ -148,10 +150,18 @@ class ASTGeneration(BKOOLVisitor):
         return [MethodDecl(Static(), Id("main"), [], VoidType(), ctx.voidBlockStmt().accept(self))]
     
     def visitNormalMethodDecl(self, ctx: BKOOLParser.NormalMethodDeclContext):
-        # normalMethodDecl: (STATIC)? (attributeType | VOID) ID LB paramList? RB (blockStmt | voidBlockStmt);
+        # normalMethodDecl: (STATIC)? attributeType ID LB paramList? RB (blockStmt | voidBlockStmt);
         kind = Static() if ctx.STATIC() else Instance()
-        returnType = VoidType() if ctx.VOID() else ctx.attributeType().accept(self)
-        block = ctx.voidBlockStmt().accept(self) if ctx.VOID() else ctx.blockStmt().accept(self)
+        returnType = ctx.attributeType().accept(self)
+        block = ctx.blockStmt().accept(self)
+        paramList = ctx.paramList().accept(self) if ctx.paramList() else []
+        return [MethodDecl(kind, Id(ctx.ID().getText()), paramList, returnType, block)]
+    
+    def visitNormalVoidMethodDecl(self, ctx: BKOOLParser.NormalMethodDeclContext):
+        # normalVoidMethodDecl: (STATIC)? VOID ID LB paramList? RB voidBlockStmt;
+        kind = Static() if ctx.STATIC() else Instance()
+        returnType = VoidType()
+        block = ctx.voidBlockStmt().accept(self)
         paramList = ctx.paramList().accept(self) if ctx.paramList() else []
         return [MethodDecl(kind, Id(ctx.ID().getText()), paramList, returnType, block)]
     
@@ -389,10 +399,7 @@ class ASTGeneration(BKOOLVisitor):
     
     
     
-    
-    
-    def visitExp(self, ctx: BKOOLParser.ExpContext):
-        return 23115
+
     
     
     
@@ -479,10 +486,13 @@ class ASTGeneration(BKOOLVisitor):
         return ctx.exp().accept(self)
     
     def visitExp9(self, ctx: BKOOLParser.Exp9Context):
-        # exp9: exp9 DOT exp10 | exp10;
+        # exp9: exp9 DOT exp10 listExp? | exp10;
         if not ctx.DOT():
             return ctx.exp10().accept(self)
-        return FieldAccess(ctx.exp9().accept(self), ctx.exp10().accept(self))
+        else:
+            if not ctx.listExp():
+                return FieldAccess(ctx.exp9().accept(self), ctx.exp10().accept(self))
+            return CallStmt(ctx.exp9().accept(self), ctx.exp10().accept(self), ctx.listExp().accept(self))
     def visitExp10(self, ctx: BKOOLParser.Exp10Context):
         # exp10: NEW exp10 listExp | exp11;
         if not ctx.NEW():
@@ -506,6 +516,7 @@ class ASTGeneration(BKOOLVisitor):
     def visitListExp(self, ctx: BKOOLParser.ListExpContext):
         # listExp: (LB arguList? RB);
         return ctx.arguList().accept(self) if ctx.arguList() else []
+    
     def visitArguList(self, ctx: BKOOLParser.ArguListContext):
         # arguList: exp (COMMA exp)*;
         return reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.exp()[1:], [ctx.exp(0).accept(self)])

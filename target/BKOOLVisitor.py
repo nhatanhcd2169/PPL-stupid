@@ -89,6 +89,11 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BKOOLParser#normalVoidMethodDecl.
+    def visitNormalVoidMethodDecl(self, ctx:BKOOLParser.NormalVoidMethodDeclContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BKOOLParser#normalMethodDecl.
     def visitNormalMethodDecl(self, ctx:BKOOLParser.NormalMethodDeclContext):
         return self.visitChildren(ctx)
