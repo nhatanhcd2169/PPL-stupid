@@ -197,16 +197,46 @@ class ASTGeneration(BKOOLVisitor):
            
     def visitBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
         # blockStmt: LP varDecl* stmt* RP;
-        varDecls = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.varDecl(), [])
+        varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.varDecl(), [])
         stmts = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.stmt(), [])
         return Block(varDecls, stmts)
     
     def visitVoidBlockStmt(self, ctx: BKOOLParser.BlockStmtContext):
         # blockStmt: LP varDecl* stmtWithoutReturn* RP;
-        varDecls = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.varDecl(), [])
+        varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.varDecl(), [])
         stmts = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.stmtWithoutReturn(), [])
         return Block(varDecls, stmts)   
     
+    def visitVarDecl(self, ctx:BKOOLParser.VarDeclContext):
+        # varDecl: (immutableVarDecl | mutableVarDecl | mutableObjVarDecl);
+        if ctx.immutableVarDecl():
+            return ctx.immutableVarDecl().accept(self)
+        elif ctx.mutableVarDecl():
+            return ctx.mutableVarDecl().accept(self)
+        else:
+            return ctx.mutableObjVarDecl().accept(self)
+    
+    def visitImmutableVarDecl(self, ctx:BKOOLParser.ImmutableVarDeclContext):
+        # immutableVarDecl: FINAL? attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
+        type = ctx.attributeType().accept(self)
+        def mapImmutable(id, expr):
+            return ConstDecl(Id(id.getText()), type, expr.accept(self))
+        return list(map(mapImmutable, ctx.ID(), ctx.immutableInitialize()))
+
+    def visitMutableVarDecl(self, ctx:BKOOLParser.MutableVarDeclContext):
+        # mutableVarDecl: attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
+        type = ctx.attributeType().accept(self)
+        def mapMutable(id, expr):
+            return VarDecl(Id(id.getText()), type, expr.accept(self))
+        return list(map(mapMutable, ctx.ID(), ctx.mutableInitialize()))
+
+    def visitMutableObjVarDecl(self, ctx:BKOOLParser.MutableObjVarDeclContext):
+        # mutableObjVarDecl: ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
+        type = ClassType(Id(ctx.ID(0).getText()))
+        def mapMutable(id, expr):
+            return VarDecl(Id(id.getText()), type, expr.accept(self))
+        return list(map(mapMutable, ctx.ID()[1:], ctx.mutableObjInitialize()))
+
     def visitAssignStmt(self, ctx:BKOOLParser.AssignStmtContext):
         # assignStmt: lhs ASSIGN exp S_COLON;
         return Assign(ctx.lhs().accept(self), ctx.exp().accept(self))

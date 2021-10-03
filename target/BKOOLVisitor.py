@@ -184,28 +184,8 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BKOOLParser#objectVars.
-    def visitObjectVars(self, ctx:BKOOLParser.ObjectVarsContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#objectVar.
-    def visitObjectVar(self, ctx:BKOOLParser.ObjectVarContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#scalarVars.
-    def visitScalarVars(self, ctx:BKOOLParser.ScalarVarsContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by BKOOLParser#scalarVar.
     def visitScalarVar(self, ctx:BKOOLParser.ScalarVarContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#arrayVars.
-    def visitArrayVars(self, ctx:BKOOLParser.ArrayVarsContext):
         return self.visitChildren(ctx)
 
 
@@ -216,26 +196,6 @@ class BKOOLVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BKOOLParser#lhs.
     def visitLhs(self, ctx:BKOOLParser.LhsContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#attrAccess.
-    def visitAttrAccess(self, ctx:BKOOLParser.AttrAccessContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#instanceName.
-    def visitInstanceName(self, ctx:BKOOLParser.InstanceNameContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#objName.
-    def visitObjName(self, ctx:BKOOLParser.ObjNameContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BKOOLParser#attrName.
-    def visitAttrName(self, ctx:BKOOLParser.AttrNameContext):
         return self.visitChildren(ctx)
 
 

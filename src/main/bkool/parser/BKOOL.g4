@@ -75,43 +75,23 @@ returnType: attributeType | VOID;
 
 ////	statement
 
-// stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt);
-// blockStmt: LP varDecl* stmt* RP;
-// stmtWithoutReturn: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt) ;
-// voidBlockStmt: LP varDecl* stmtWithoutReturn* RP;
-
 stmt: (assignStmt | ifStmt | forStmt | breakStmt | continueStmt | invokeStmt | returnStmt | blockStmt);
 blockStmt: LP varDecl* stmt* RP;
 stmtWithoutReturn: (assignStmt | ifStmtWithoutReturn | forStmtWithoutReturn | breakStmt | continueStmt | invokeStmt | voidBlockStmt) ;
 voidBlockStmt: LP varDecl* stmtWithoutReturn* RP;
 
-
-
-varDecl: (scalarVars | arrayVars | objectVars);
+varDecl: (immutableVarDecl | mutableVarDecl | mutableObjVarDecl);
 
 immutableVarDecl: FINAL? attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
 mutableVarDecl: attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
 mutableObjVarDecl: ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
 
-
-objectVars: className objectVar (COMMA objectVar)* S_COLON;
-objectVar: ID;
-scalarVars: attributeType scalarVar (COMMA scalarVar)* S_COLON;
 scalarVar: ID;
-arrayVars: attributeType LSB INTEGER_LITERAL RSB scalarVar (COMMA scalarVar)* S_COLON;
-
 
 assignStmt: lhs ASSIGN exp S_COLON;
 
-
 // lhs: (arrayVar | scalarVar | attrAccess);
 lhs: exp;
-
-attrAccess: instanceName DOT attrName;
-instanceName: (THIS | objName);
-objName: ID;
-attrName: (scalarVar | arrayVar);
-
 
 ifStmt: IF exp THEN stmt (ELSE stmt)?;
 ifStmtWithoutReturn: IF exp THEN stmtWithoutReturn (ELSE stmtWithoutReturn)?;
