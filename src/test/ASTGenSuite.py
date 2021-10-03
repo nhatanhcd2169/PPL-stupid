@@ -40,7 +40,7 @@ class ASTGenSuite(unittest.TestCase):
         input = """
         class kori extends phuong {
             int phuongggggg;
-            float[5] uwu;
+            float[5] uwu = {1,2,3,4.5,"concu"};
             final float x = 7;
             static float y;
             final static float x = 4 * 5 + 7 / 3 * a[5], y = 3;

@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import ArrayCell, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, BooleanLiteral, Break, CallStmt, ClassDecl, ClassType, ConstDecl, Continue, FieldAccess, FloatLiteral, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, NullLiteral, Program, Return, Static, StringLiteral, StringType, UnaryOp, VarDecl, VoidType
+from main.bkool.utils.AST import ArrayCell, ArrayLiteral, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, BooleanLiteral, Break, CallStmt, ClassDecl, ClassType, ConstDecl, Continue, FieldAccess, FloatLiteral, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, NullLiteral, Program, Return, Static, StringLiteral, StringType, UnaryOp, VarDecl, VoidType
 
 class ASTGeneration(BKOOLVisitor):
     
@@ -33,7 +33,6 @@ class ASTGeneration(BKOOLVisitor):
         else:
             return ctx.mutableObjAttrDecl().accept(self)
                
-    
     def visitImmutableAttrDecl(self, ctx: BKOOLParser.ImmutableAttrDeclContext):
         # immutableAttrDecl: (FINAL | FINAL STATIC | STATIC FINAL) attributeType (ID immutableAttrAssign) (COMMA (ID immutableAttrAssign))* S_COLON;
         kind = Instance() if (not ctx.STATIC()) else Static()
@@ -41,14 +40,6 @@ class ASTGeneration(BKOOLVisitor):
         def mapImmutable(id, expr):
             return AttributeDecl(kind, ConstDecl(Id(id.getText()), type, expr.accept(self)))
         return list(map(mapImmutable, ctx.ID(), ctx.immutableAttrAssign()))
-    
-    # def visitMutableAttrDecl(self, ctx: BKOOLParser.MutableAttrDeclContext):
-    #     # mutableAttrDecl: (STATIC)? attributeType (ID mutableAttrAssign) (COMMA (ID mutableAttrAssign))* S_COLON;
-    #     kind = Instance() if (not ctx.STATIC()) else Static()
-    #     type = ctx.attributeType().accept(self)
-    #     def mapMutable(id, expr):
-    #         return AttributeDecl(kind, VarDecl(Id(id.getText()), type, expr.accept(self)))
-    #     return list(map(mapMutable, ctx.ID(), ctx.mutableAttrAssign()))
     
     def visitMutableAttrDecl(self, ctx: BKOOLParser.MutableAttrDeclContext):
         # mutableAttrDecl: (STATIC)? attributeType (ID mutableAttrAssign) (COMMA (ID mutableAttrAssign))* S_COLON;
@@ -96,9 +87,6 @@ class ASTGeneration(BKOOLVisitor):
     def visitCompositeType(self, ctx: BKOOLParser.CompositeTypeContext):
         # compositeType: scalarType LSB INTEGER_LITERAL RSB; 
         return ArrayType(IntLiteral(int(ctx.INTEGER_LITERAL().getText())), ctx.scalarType().accept(self))
-    
-    # def visitObjectDecl(self, ctx: BKOOLParser.ObjectDeclContext):
-    #     return None
     
     def visitMethodDecl(self, ctx: BKOOLParser.MethodDeclContext):
         # methodDecl: constructorDecl | normalMethodDecl | mainMethodDecl;
@@ -383,6 +371,8 @@ class ASTGeneration(BKOOLVisitor):
             return ctx.methodInvoke().accept(self)
         elif ctx.THIS():
             return ctx.THIS().getText()
+        elif ctx.array_literal():
+            return ctx.array_literal().accept(self)
         
     def visitMethodInvoke(self, ctx: BKOOLParser.MethodInvokeContext):
         # methodInvoke: ID listExp;
@@ -406,6 +396,10 @@ class ASTGeneration(BKOOLVisitor):
             return ctx.bool_literal().accept(self)
         else:
             return StringLiteral(ctx.STRING_LITERAL().getText())
+        
+    def visitArray_literal(self, ctx:BKOOLParser.Array_literalContext):
+        value = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.literal()[1:], [ctx.literal(0).accept(self)])
+        return ArrayLiteral(value)
         
     def visitBool_literal(self, ctx: BKOOLParser.Bool_literalContext):
         value = ctx.TRUE().getText() if ctx.TRUE() else ctx.FALSE().getText()

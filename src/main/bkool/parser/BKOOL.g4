@@ -44,8 +44,6 @@ methodDecl: constructorDecl | normalMethodDecl | mainMethodDecl | normalVoidMeth
 
 constructorDecl: ID LB paramList? RB voidBlockStmt;
 
-// normalMethodDecl: (STATIC)? (attributeType | VOID) ID LB paramList? RB (blockStmt | voidBlockStmt);
-
 normalMethodDecl: (STATIC)? attributeType ID LB paramList? RB blockStmt;
 
 normalVoidMethodDecl: (STATIC)? VOID ID LB paramList? RB voidBlockStmt;
@@ -54,11 +52,11 @@ mainMethodDecl: VOID MAIN LB RB voidBlockStmt;
 
 paramList: params (S_COLON params)*;
 
-params: (monoParams | polyParams); // choose????
+params: (monoParams | polyParams);
 
-monoParams: paramType monoParam (COMMA monoParam)*; // int a, b; float c
+monoParams: paramType monoParam (COMMA monoParam)*;
 
-polyParams: polyParam (COMMA polyParam)*; // int a; int b
+polyParams: polyParam (COMMA polyParam)*;
 
 paramType: (attributeType | classParamType);
 
@@ -138,7 +136,7 @@ exp7: adding exp7 | exp8;
 exp8: exp8 indexOp | exp9;
 exp9: exp9 DOT exp10 listExp? | exp10;
 exp10: NEW exp10 listExp | exp11;
-exp11: LB exp RB| literal | ID | methodInvoke | THIS;
+exp11: LB exp RB| literal | ID | methodInvoke | THIS | array_literal;
 
 adding: PLUS | MINUS;
 multiply: MULTIPLY | MODULUS | F_DIVIDE | I_DIVIDE;
