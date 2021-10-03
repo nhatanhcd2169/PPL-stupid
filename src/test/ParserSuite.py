@@ -182,7 +182,7 @@ class ParserSuite(unittest.TestCase):
     def test_21(self):
         input = r"""
                     class test {
-                        static void main() {
+                        void main() {
                             int a;
                         }
                     }
@@ -780,7 +780,7 @@ class ParserSuite(unittest.TestCase):
         self.assertTrue(TestParser.test(input,expect,298))    
     def test_99(self):
         input = """class test {
-            static final Shape char;
+            final Shape char;
             final static int arr[5];
         }"""
         expect = "Error on line 3 col 32: ["

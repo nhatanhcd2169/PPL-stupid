@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import ArrayCell, ArrayLiteral, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, BooleanLiteral, Break, CallStmt, ClassDecl, ClassType, ConstDecl, Continue, FieldAccess, FloatLiteral, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, NullLiteral, Program, Return, Static, StringLiteral, StringType, UnaryOp, VarDecl, VoidType
+from main.bkool.utils.AST import CallExpr, SelfLiteral, ArrayCell, ArrayLiteral, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, BooleanLiteral, Break, CallStmt, ClassDecl, ClassType, ConstDecl, Continue, FieldAccess, FloatLiteral, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, NullLiteral, Program, Return, Static, StringLiteral, StringType, UnaryOp, VarDecl, VoidType
 
 class ASTGeneration(BKOOLVisitor):
     
@@ -382,7 +382,7 @@ class ASTGeneration(BKOOLVisitor):
         else:
             if not ctx.listExp():
                 return FieldAccess(ctx.exp9().accept(self), ctx.exp10().accept(self))
-            return CallStmt(ctx.exp9().accept(self), ctx.exp10().accept(self), ctx.listExp().accept(self))
+            return CallExpr(ctx.exp9().accept(self), ctx.exp10().accept(self), ctx.listExp().accept(self))
         
     def visitExp10(self, ctx: BKOOLParser.Exp10Context):
         # exp10: NEW exp10 listExp | exp11;
@@ -401,7 +401,8 @@ class ASTGeneration(BKOOLVisitor):
         elif ctx.methodInvoke():
             return ctx.methodInvoke().accept(self)
         elif ctx.THIS():
-            return ctx.THIS().getText()
+            # return ctx.THIS().getText()
+            return SelfLiteral()
         elif ctx.array_literal():
             return ctx.array_literal().accept(self)
         
