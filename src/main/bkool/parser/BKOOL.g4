@@ -37,16 +37,13 @@ attributeType: compositeType | scalarType;
 scalarType: INT | FLOAT | STRING | BOOLEAN;
 compositeType: scalarType LSB INTEGER_LITERAL RSB;
 
-
-////////	OBJECT
-
 ////////	method
 
 methodDecl: constructorDecl | normalMethodDecl | mainMethodDecl | normalVoidMethodDecl;
 
 constructorDecl: ID LB paramList? RB voidBlockStmt;
 
-normalMethodDecl: (STATIC)? attributeType ID LB paramList? RB blockStmt;
+normalMethodDecl: (STATIC)? (attributeType | className) ID LB paramList? RB blockStmt;
 
 normalVoidMethodDecl: (STATIC)? VOID ID LB paramList? RB voidBlockStmt;
 

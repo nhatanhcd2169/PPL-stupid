@@ -123,3 +123,31 @@ class ASTGenSuite(unittest.TestCase):
             }"""
         expect = """Program([ClassDecl(Id(a),[MethodDecl(Id(test),Instance,[],VoidType,Block([],[AssignStmt(ArrayCell(Id(a),BinaryOp(+,IntLit(3),CallExpr(Id(x),Id(foo),[IntLit(2)]))),BinaryOp(+,ArrayCell(Id(a),ArrayCell(Id(b),IntLit(2))),IntLit(3)))]))])])"""
         self.assertTrue(TestAST.test(input,expect,309))
+        
+    def test_11(self):
+        input = """class a {
+                    void test() {
+                        x.b[2] := x.m()[3];
+                    }
+
+            }"""
+        expect = """Program([ClassDecl(Id(a),[MethodDecl(Id(test),Instance,[],VoidType,Block([],[AssignStmt(ArrayCell(FieldAccess(Id(x),Id(b)),IntLit(2)),ArrayCell(CallExpr(Id(x),Id(m),[]),IntLit(3)))]))])])"""
+        self.assertTrue(TestAST.test(input,expect,310))
+        
+    def test_12(self):
+        input = """
+            class a {
+                int[5] kori(int copy, Phuong isPhuong) {}
+            }
+        """
+        expect = "Program([ClassDecl(Id(a),[MethodDecl(Id(kori),Instance,[param(Id(copy),IntType),param(Id(isPhuong),ClassType(Phuong))],ArrayType(IntLit(5),IntType),Block([],[]))])])"
+        self.assertTrue(TestAST.test(input,expect,311))
+        
+    def test_13(self):
+        input = """
+            class a {
+                Shape kori(int ok) {}
+            }
+        """
+        expect = "Program([ClassDecl(Id(a),[MethodDecl(Id(kori),Instance,[param(Id(ok),IntType)],ClassType(Shape),Block([],[]))])])"
+        self.assertTrue(TestAST.test(input,expect,312))

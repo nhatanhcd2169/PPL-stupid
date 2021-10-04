@@ -242,7 +242,7 @@ class ParserSuite(unittest.TestCase):
                         }
                     }
                 """
-        expect = r"successful"
+        expect = r"Error on line 3 col 28: main"
         self.assertTrue(TestParser.test(input,expect,227))
     def test_28(self):
         input = r"""
@@ -311,7 +311,7 @@ class ParserSuite(unittest.TestCase):
             void main(){
                 string con = lecturer ^ " - ";
             }"""
-        expect = "Error on line 5 col 27: ="
+        expect = "Error on line 6 col 13: <EOF>"
         self.assertTrue(TestParser.test(input,expect,238))
     def test_39(self):
         input = """class PPL {
@@ -386,7 +386,7 @@ class ParserSuite(unittest.TestCase):
             string[7] intel = 5;
         }
         """
-        expect = "Error on line 2 col 30: 5"
+        expect = "successful"
         self.assertTrue(TestParser.test(input,expect,246))
     def test_47(self):
         input = """class KORI {
@@ -470,7 +470,7 @@ class ParserSuite(unittest.TestCase):
                 if ("i love you") then "what";
             }
         }"""
-        expect = "Error on line 3 col 39: what"
+        expect = "Error on line 3 col 45: ;"
         self.assertTrue(TestParser.test(input,expect,258))
     def test_59(self):
         input = """class ABC {
@@ -480,7 +480,7 @@ class ParserSuite(unittest.TestCase):
                 }
             }
         }"""
-        expect = "Error on line 4 col 25: ("
+        expect = "Error on line 4 col 31: ;"
         self.assertTrue(TestParser.test(input,expect,259))
     def test_60(self):
         input = """class ABC {
@@ -510,7 +510,7 @@ class ParserSuite(unittest.TestCase):
                 }
             }
         }"""
-        expect = "successful"
+        expect = "Error on line 4 col 50: )"
         self.assertTrue(TestParser.test(input,expect,262))
     def test_63(self):
         input = """class ABC {
@@ -529,7 +529,7 @@ class ParserSuite(unittest.TestCase):
             }
         }
         """ 
-        expect = "Error on line 3 col 46: ("
+        expect = "Error on line 4 col 12: }"
         self.assertTrue(TestParser.test(input,expect,264))
     def test_65(self):
         input = """class test {
@@ -550,16 +550,20 @@ class ParserSuite(unittest.TestCase):
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,266))
     def test_67(self):
-        input = """class test {
-            int foo() {
+        input = """
+        class test 
+        {
+            int foo() 
+            {
                 for i := 1 to 5e2 do this.fibonacci();
-                int foo2() {
+                int foo2() 
+                {
                     return 1;
                 }
             }
         }
         """ 
-        expect = "Error on line 4 col 16: int"
+        expect = "Error on line 6 col 53: ;"
         self.assertTrue(TestParser.test(input,expect,267))
     def test_68(self):
         input = """
@@ -639,7 +643,7 @@ class ParserSuite(unittest.TestCase):
         self.assertTrue(TestParser.test(input,expect,277))    
     def test_78(self):
         input = """class test {
-            int main() {
+            void main() {
                 a[b+c/d*e.f] = new Obj;
             }
         }"""
@@ -647,15 +651,15 @@ class ParserSuite(unittest.TestCase):
         self.assertTrue(TestParser.test(input,expect,278))    
     def test_79(self):
         input = """class test {
-            int main() {
-                a[b+c/d*e.f] := new Obj;
+            void main() {
+                a[b+c/d*e.f] := new Obj();
             }
         }"""
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,279))    
     def test_80(self):
         input = """class test {
-            int main() {
+            void main() {
                 new Obj := [b+c/d*e.f];
             }
         }"""
@@ -663,15 +667,15 @@ class ParserSuite(unittest.TestCase):
         self.assertTrue(TestParser.test(input,expect,280))    
     def test_81(self):
         input = """class test {
-            int main() {
-                +a := 5;
+            void main() {
+                a := 5;
             }
         }"""
-        expect = "Error on line 3 col 16: +"
+        expect = "successful"
         self.assertTrue(TestParser.test(input,expect,281))    
     def test_82(self):
         input = """class test {
-            int main() {
+            void main() {
                 a := +a;
             }
         }"""
@@ -725,7 +729,7 @@ class ParserSuite(unittest.TestCase):
                 static integer;
             }
         }"""
-        expect = "Error on line 3 col 16: static"
+        expect = "Error on line 2 col 16: main"
         self.assertTrue(TestParser.test(input,expect,290))    
     def test_91(self):
         input = """class PPL {
@@ -769,18 +773,18 @@ class ParserSuite(unittest.TestCase):
             static final test char;
             final static int[] arr;
         }"""
-        expect = "Error on line 3 col 29: ]"
+        expect = "Error on line 2 col 25: test"
         self.assertTrue(TestParser.test(input,expect,297))    
     def test_98(self):
         input = """class test {
-            static final Shape char;
+            static Shape char;
             final static int["abc"] arr;
         }"""
         expect = "Error on line 3 col 29: abc"
         self.assertTrue(TestParser.test(input,expect,298))    
     def test_99(self):
         input = """class test {
-            final Shape char;
+            Shape char;
             final static int arr[5];
         }"""
         expect = "Error on line 3 col 32: ["

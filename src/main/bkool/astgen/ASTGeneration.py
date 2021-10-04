@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-# from main.bkool.utils.AST import CallExpr, SelfLiteral, ArrayCell, ArrayLiteral, ArrayType, Assign, AttributeDecl, BinaryOp, Block, BoolType, BooleanLiteral, Break, CallStmt, ClassDecl, ClassType, ConstDecl, Continue, FieldAccess, FloatLiteral, FloatType, For, Id, If, Instance, IntLiteral, IntType, MethodDecl, NewExpr, NullLiteral, Program, Return, Static, StringLiteral, StringType, UnaryOp, VarDecl, VoidType
+from main.bkool.utils.AST import *
 
 class ASTGeneration(BKOOLVisitor):
     
@@ -109,9 +109,9 @@ class ASTGeneration(BKOOLVisitor):
         return [MethodDecl(Static(), Id("main"), [], VoidType(), ctx.voidBlockStmt().accept(self))]
     
     def visitNormalMethodDecl(self, ctx: BKOOLParser.NormalMethodDeclContext):
-        # normalMethodDecl: (STATIC)? attributeType ID LB paramList? RB blockStmt;
+        # normalMethodDecl: (STATIC)? (attributeType | className) ID LB paramList? RB blockStmt;
         kind = Static() if ctx.STATIC() else Instance()
-        returnType = ctx.attributeType().accept(self)
+        returnType = ctx.attributeType().accept(self) if ctx.attributeType() else ctx.className().accept(self)
         block = ctx.blockStmt().accept(self)
         paramList = ctx.paramList().accept(self) if ctx.paramList() else []
         return [MethodDecl(kind, Id(ctx.ID().getText()), paramList, returnType, block)]
