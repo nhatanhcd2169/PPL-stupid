@@ -50,9 +50,11 @@ class ASTGeneration(BKOOLVisitor):
         return list(map(mapMutable, ctx.ID(), ctx.mutableInitialize()))
 
     def visitMutableObjAttrDecl(self, ctx: BKOOLParser.MutableAttrDeclContext):
-        # mutableObjAttrDecl: (STATIC)? ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
+        # mutableObjAttrDecl:  (STATIC)? ID (LSB INTEGER_LITERAL RSB)? (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
         kind = Instance() if (not ctx.STATIC()) else Static()
-        type = ClassType(Id(ctx.ID(0).getText()))
+        type = ClassType(Id(ctx.ID(0).getText())) 
+        if ctx.LSB():
+            type = ArrayType(IntLiteral(int(ctx.INTEGER_LITERAL().getText())), ClassType(Id(ctx.ID(0).getText())))
         def mapMutable(id, expr):
             return AttributeDecl(kind, VarDecl(Id(id.getText()), type, expr.accept(self)))
         return list(map(mapMutable, ctx.ID()[1:], ctx.mutableObjInitialize()))
@@ -62,8 +64,14 @@ class ASTGeneration(BKOOLVisitor):
         return ctx.exp().accept(self) if ctx.exp() else None
     
     def visitMutableObjInitialize(self, ctx: BKOOLParser.MutableInitializeContext):
-        # mutableObjInitialize: (EQUAL_SIGN exp10)?;
-        return ctx.exp10().accept(self) if ctx.exp10() else NullLiteral()
+        # mutableObjInitialize: (EQUAL_SIGN objInit)?;
+        return NullLiteral() if (not ctx.EQUAL_SIGN())else ctx.objInit().accept(self)
+    
+    def visitObjInit(self, ctx: BKOOLParser.ObjInitContext):
+        # objInit: (ID | NEW ID listExp);
+        if (ctx.getChildCount() > 1):
+            return NewExpr(Id(ctx.ID().getText()), ctx.listExp().accept(self))
+        return Id(ctx.ID().getText())
     
     def visitImmutableInitialize(self, ctx: BKOOLParser.ImmutableInitializeContext):
         # immutableInitialize: (EQUAL_SIGN exp);
@@ -231,8 +239,10 @@ class ASTGeneration(BKOOLVisitor):
         return list(map(mapMutable, ctx.ID(), ctx.mutableInitialize()))
 
     def visitMutableObjVarDecl(self, ctx:BKOOLParser.MutableObjVarDeclContext):
-        # mutableObjVarDecl: ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
+        # mutableObjVarDecl: ID (LSB INTEGER_LITERAL RSB)? (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
         type = ClassType(Id(ctx.ID(0).getText()))
+        if ctx.LSB():
+            type = ArrayType(IntLiteral(int(ctx.INTEGER_LITERAL().getText())), ClassType(Id(ctx.ID(0).getText())))
         def mapMutable(id, expr):
             return VarDecl(Id(id.getText()), type, expr.accept(self))
         return list(map(mapMutable, ctx.ID()[1:], ctx.mutableObjInitialize()))
@@ -401,7 +411,6 @@ class ASTGeneration(BKOOLVisitor):
         elif ctx.methodInvoke():
             return ctx.methodInvoke().accept(self)
         elif ctx.THIS():
-            # return ctx.THIS().getText()
             return SelfLiteral()
         elif ctx.array_literal():
             return ctx.array_literal().accept(self)
@@ -436,8 +445,6 @@ class ASTGeneration(BKOOLVisitor):
     def visitBool_literal(self, ctx: BKOOLParser.Bool_literalContext):
         value = ctx.TRUE().getText() if ctx.TRUE() else ctx.FALSE().getText()
         return BooleanLiteral(bool(value))
-    
-    
     
     def visitClassName(self, ctx:BKOOLParser.ClassNameContext):
         return ClassType(ctx.ID().getText())

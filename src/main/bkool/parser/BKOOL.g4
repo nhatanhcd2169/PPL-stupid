@@ -27,11 +27,13 @@ memDecl: attributeDecl | methodDecl;
 attributeDecl: immutableAttrDecl | mutableAttrDecl | mutableObjAttrDecl;
 immutableAttrDecl: (FINAL | FINAL STATIC | STATIC FINAL) attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
 mutableAttrDecl: (STATIC)? attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
-mutableObjAttrDecl:  (STATIC)? ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
+mutableObjAttrDecl:  (STATIC)? ID (LSB INTEGER_LITERAL RSB)? (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
 
 immutableInitialize: (EQUAL_SIGN exp);
 mutableInitialize: (EQUAL_SIGN exp)?;
-mutableObjInitialize: (EQUAL_SIGN exp10)?;
+// mutableObjInitialize: (EQUAL_SIGN exp10)?;
+mutableObjInitialize: (EQUAL_SIGN objInit)?;
+objInit: (ID | NEW ID listExp);
 
 attributeType: compositeType | scalarType;
 scalarType: INT | FLOAT | STRING | BOOLEAN;
@@ -81,7 +83,7 @@ varDecl: (immutableVarDecl | mutableVarDecl | mutableObjVarDecl);
 
 immutableVarDecl: FINAL? attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
 mutableVarDecl: attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
-mutableObjVarDecl: ID (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
+mutableObjVarDecl: ID (LSB INTEGER_LITERAL RSB)? (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
 
 scalarVar: ID;
 

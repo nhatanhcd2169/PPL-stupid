@@ -47,11 +47,11 @@ class ASTGenSuite(unittest.TestCase):
             static final int x = 123, y = 5;
             int abc = !b;
             string x = y ^ "ok";
-            int s = new Shape(a, b, 12, 25, 232525223, 2.12314, false, "kori  phuonggggggg");
+            Shapy s = new Shapy(a, b, 12, 25, 232525223, 2.12314, false, "kori  phuonggggggg");
         }
         class phuong extends kori {}        
         """
-        expect = """Program([ClassDecl(Id(kori),Id(phuong),[AttributeDecl(Instance,VarDecl(Id(phuongggggg),IntType)),AttributeDecl(Instance,VarDecl(Id(uwu),ArrayType(IntLit(5),FloatType),[IntLit(1),IntLit(2),IntLit(3),FloatLit(4.5),StringLit(concu)])),AttributeDecl(Instance,ConstDecl(Id(x),FloatType,IntLit(7))),AttributeDecl(Static,VarDecl(Id(y),FloatType)),AttributeDecl(Static,ConstDecl(Id(x),FloatType,BinaryOp(+,BinaryOp(*,IntLit(4),IntLit(5)),BinaryOp(*,BinaryOp(/,IntLit(7),IntLit(3)),ArrayCell(Id(a),IntLit(5)))))),AttributeDecl(Static,ConstDecl(Id(y),FloatType,IntLit(3))),AttributeDecl(Static,ConstDecl(Id(x),IntType,IntLit(123))),AttributeDecl(Static,ConstDecl(Id(y),IntType,IntLit(5))),AttributeDecl(Instance,VarDecl(Id(abc),IntType,UnaryOp(!,Id(b)))),AttributeDecl(Instance,VarDecl(Id(x),StringType,BinaryOp(^,Id(y),StringLit(ok)))),AttributeDecl(Instance,VarDecl(Id(s),IntType,NewExpr(Id(Shape),[Id(a),Id(b),IntLit(12),IntLit(25),IntLit(232525223),FloatLit(2.12314),BooleanLit(True),StringLit(kori  phuonggggggg)])))]),ClassDecl(Id(phuong),Id(kori),[])])"""
+        expect = """Program([ClassDecl(Id(kori),Id(phuong),[AttributeDecl(Instance,VarDecl(Id(phuongggggg),IntType)),AttributeDecl(Instance,VarDecl(Id(uwu),ArrayType(IntLit(5),FloatType),[IntLit(1),IntLit(2),IntLit(3),FloatLit(4.5),StringLit(concu)])),AttributeDecl(Instance,ConstDecl(Id(x),FloatType,IntLit(7))),AttributeDecl(Static,VarDecl(Id(y),FloatType)),AttributeDecl(Static,ConstDecl(Id(x),FloatType,BinaryOp(+,BinaryOp(*,IntLit(4),IntLit(5)),BinaryOp(*,BinaryOp(/,IntLit(7),IntLit(3)),ArrayCell(Id(a),IntLit(5)))))),AttributeDecl(Static,ConstDecl(Id(y),FloatType,IntLit(3))),AttributeDecl(Static,ConstDecl(Id(x),IntType,IntLit(123))),AttributeDecl(Static,ConstDecl(Id(y),IntType,IntLit(5))),AttributeDecl(Instance,VarDecl(Id(abc),IntType,UnaryOp(!,Id(b)))),AttributeDecl(Instance,VarDecl(Id(x),StringType,BinaryOp(^,Id(y),StringLit(ok)))),AttributeDecl(Instance,VarDecl(Id(s),ClassType(Id(Shapy)),NewExpr(Id(Shapy),[Id(a),Id(b),IntLit(12),IntLit(25),IntLit(232525223),FloatLit(2.12314),BooleanLit(True),StringLit(kori  phuonggggggg)])))]),ClassDecl(Id(phuong),Id(kori),[])])"""
         self.assertTrue(TestAST.test(input,expect,302))
         
     def test_4(self):
@@ -64,7 +64,7 @@ class ASTGenSuite(unittest.TestCase):
     def test_5(self):
         input = """class a extends b {
                     final int c = daaaaaa != 5;
-                    int cacbu;
+                    int cactus;
                     void kori() 
                     {
                         int x;
@@ -78,14 +78,14 @@ class ASTGenSuite(unittest.TestCase):
                         }
                     }
             }"""
-        expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Instance,ConstDecl(Id(c),IntType,BinaryOp(!=,Id(daaaaaa),IntLit(5)))),AttributeDecl(Instance,VarDecl(Id(cacbu),IntType)),MethodDecl(Id(kori),Instance,[],VoidType,Block([VarDecl(Id(x),IntType),ConstDecl(Id(x),FloatType,FloatLit(1.224))],[AssignStmt(Id(b),CallExpr(Self(),Id(call),[Id(leftRecursive),Id(rightRecursive)]))])),MethodDecl(Id(main),Static,[],VoidType,Block([],[For(Id(x),IntLit(1),UnaryOp(-,IntLit(1)),False,Block([],[AssignStmt(Id(x),BinaryOp(+,Id(x),IntLit(5)))])])]))])])""" 
+        expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Instance,ConstDecl(Id(c),IntType,BinaryOp(!=,Id(daaaaaa),IntLit(5)))),AttributeDecl(Instance,VarDecl(Id(cactus),IntType)),MethodDecl(Id(kori),Instance,[],VoidType,Block([VarDecl(Id(x),IntType),ConstDecl(Id(x),FloatType,FloatLit(1.224))],[AssignStmt(Id(b),CallExpr(Self(),Id(call),[Id(leftRecursive),Id(rightRecursive)]))])),MethodDecl(Id(main),Static,[],VoidType,Block([],[For(Id(x),IntLit(1),UnaryOp(-,IntLit(1)),False,Block([],[AssignStmt(Id(x),BinaryOp(+,Id(x),IntLit(5)))])])]))])])""" 
         self.assertTrue(TestAST.test(input,expect,304))
         
     def test_6(self):
         input = """class a extends b {
-                    int c = this.ok().not_ok.very_ok().wtf.nah.mam_tom / 2 \ 5;
+                    int c = this.ok().not_ok.very_ok().wtf.nah.hehe / 2 \ 5;
             }"""
-        expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Instance,VarDecl(Id(c),IntType,BinaryOp(\,BinaryOp(/,FieldAccess(FieldAccess(FieldAccess(CallExpr(FieldAccess(CallExpr(Self(),Id(ok),[]),Id(not_ok)),Id(very_ok),[]),Id(wtf)),Id(nah)),Id(mam_tom)),IntLit(2)),IntLit(5))))])])"""
+        expect = """Program([ClassDecl(Id(a),Id(b),[AttributeDecl(Instance,VarDecl(Id(c),IntType,BinaryOp(\,BinaryOp(/,FieldAccess(FieldAccess(FieldAccess(CallExpr(FieldAccess(CallExpr(Self(),Id(ok),[]),Id(not_ok)),Id(very_ok),[]),Id(wtf)),Id(nah)),Id(hehe)),IntLit(2)),IntLit(5))))])])"""
         self.assertTrue(TestAST.test(input,expect,305))
         
     def test_7(self):
@@ -151,3 +151,24 @@ class ASTGenSuite(unittest.TestCase):
         """
         expect = "Program([ClassDecl(Id(a),[MethodDecl(Id(kori),Instance,[param(Id(ok),IntType)],ClassType(Shape),Block([],[]))])])"
         self.assertTrue(TestAST.test(input,expect,312))
+        
+    def test_14(self):
+        input = """
+            class a {
+                Shape[123141412313123231231321123] s = new Shape();
+            }
+        """
+        expect = "Program([ClassDecl(Id(a),[AttributeDecl(Instance,VarDecl(Id(s),ArrayType(IntLit(123141412313123231231321123),ClassType(Id(Shape))),NewExpr(Id(Shape),[])))])])"
+        self.assertTrue(TestAST.test(input,expect,313))   
+         
+    def test_15(self):
+        input = """
+            class a {
+                void main() {
+                    Shape[5] x;
+                    Shape y;
+                }
+            }
+        """
+        expect = "Program([ClassDecl(Id(a),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(x),ArrayType(IntLit(5),ClassType(Id(Shape))),NullLiteral()),VarDecl(Id(y),ClassType(Id(Shape)),NullLiteral())],[]))])])"
+        self.assertTrue(TestAST.test(input,expect,314))   
