@@ -43,7 +43,7 @@ compositeType: scalarType LSB INTEGER_LITERAL RSB;
 
 methodDecl: constructorDecl | normalMethodDecl | mainMethodDecl | normalVoidMethodDecl;
 
-constructorDecl: ID LB paramList? RB voidBlockStmt;
+constructorDecl: ID LB paramList? RB cstrBlockStmt;
 
 normalMethodDecl: (STATIC)? (attributeType | className) ID LB paramList? RB blockStmt;
 
@@ -79,18 +79,29 @@ blockStmt: LP varDecl* stmt* RP;
 stmtWithoutReturn: (assignStmt | ifStmtWithoutReturn | forStmtWithoutReturn | breakStmt | continueStmt | invokeStmt | voidBlockStmt) ;
 voidBlockStmt: LP varDecl* stmtWithoutReturn* RP;
 
+cstrBlockStmt: LP cstrVarDecl* stmtWithoutReturn* RP;
+cstrVarDecl: (immutableCstrVarDecl | mutableCstrVarDecl | mutableObjCstrVarDecl);
 varDecl: (immutableVarDecl | mutableVarDecl | mutableObjVarDecl);
 
-immutableVarDecl: FINAL? attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
+immutableVarDecl: FINAL attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
 mutableVarDecl: attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
 mutableObjVarDecl: ID (LSB INTEGER_LITERAL RSB)? (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
+
+immutableCstrVarDecl: FINAL attributeType (ID immutableCstrVarInit) (COMMA (ID immutableCstrVarInit))* S_COLON;
+mutableCstrVarDecl: attributeType (ID mutableCstrVarInit) (COMMA (ID mutableCstrVarInit))* S_COLON;
+mutableObjCstrVarDecl: ID (LSB INTEGER_LITERAL RSB)? (ID mutableObjCstrVarInit) (COMMA (ID mutableObjCstrVarInit))* S_COLON;
+
+
+immutableCstrVarInit: (EQUAL_SIGN exp);
+mutableCstrVarInit: (EQUAL_SIGN exp)?;
+mutableObjCstrVarInit: (EQUAL_SIGN objInit)?;
 
 scalarVar: ID;
 
 assignStmt: lhs ASSIGN exp S_COLON;
 
 // lhs: (arrayVar | scalarVar | attrAccess);
-lhs: exp;
+lhs: ID | (ID | THIS) DOT (ID (LSB exp RSB)?) | ID LSB exp RSB;
 
 ifStmt: IF exp THEN stmt (ELSE stmt)?;
 ifStmtWithoutReturn: IF exp THEN stmtWithoutReturn (ELSE stmtWithoutReturn)?;

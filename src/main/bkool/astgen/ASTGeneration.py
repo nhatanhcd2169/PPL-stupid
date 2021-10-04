@@ -108,9 +108,9 @@ class ASTGeneration(BKOOLVisitor):
             return ctx.mainMethodDecl().accept(self)
 
     def visitConstructorDecl(self, ctx: BKOOLParser.ConstructorDeclContext):
-        # constructorDecl: ID LB paramList? RB blockStmt;
+        # constructorDecl: ID LB paramList? RB cstrBlockStmt;
         paramList = ctx.paramList().accept(self) if ctx.paramList() else []
-        return [MethodDecl(Instance(), Id("<init>"), paramList, VoidType(), ctx.voidBlockStmt().accept(self))]
+        return [MethodDecl(Instance(), Id("<init>"), paramList, VoidType(), ctx.cstrBlockStmt().accept(self))]
     
     def visitMainMethodDecl(self, ctx:BKOOLParser.MainMethodDeclContext):
         # mainMethodDecl: VOID MAIN LB RB voidBlockStmt;
@@ -214,6 +214,63 @@ class ASTGeneration(BKOOLVisitor):
         varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.varDecl(), [])
         stmts = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.stmtWithoutReturn(), [])
         return Block(varDecls, stmts)   
+        # Visit a parse tree produced by BKOOLParser#cstrBlock.
+        
+    def visitCstrBlockStmt(self, ctx:BKOOLParser.CstrBlockStmtContext):
+        # cstrBlockStmt: LP cstrVarDecl* stmtWithoutReturn* RP;
+        varDecls = reduce(lambda acc, ele: acc + ele.accept(self), ctx.cstrVarDecl(), [])
+        stmts = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.stmtWithoutReturn(), [])
+        return Block(varDecls, stmts) 
+        
+    def visitCstrVarDecl(self, ctx:BKOOLParser.CstrVarDeclContext):
+        # cstrVarDecl: (immutableCstrVarDecl | mutableCstrVarDecl | mutableObjCstrVarDecl);
+        if ctx.immutableCstrVarDecl():
+            return ctx.immutableCstrVarDecl().accept(self)
+        elif ctx.mutableCstrVarDecl():
+            return ctx.mutableCstrVarDecl().accept(self)
+        else:
+            return ctx.mutableObjCstrVarDecl().accept(self)
+
+
+    def visitImmutableCstrVarDecl(self, ctx:BKOOLParser.ImmutableCstrVarDeclContext):
+        # immutableCstrVarDecl: FINAL attributeType (ID immutableCstrVarInit) (COMMA (ID immutableCstrVarInit))* S_COLON;
+        type = ctx.attributeType().accept(self)
+        def mapImmutable(id, expr):
+            return ConstDecl(Id(id.getText()), type, expr.accept(self))
+        return list(map(mapImmutable, ctx.ID(), ctx.immutableCstrVarInit()))
+
+
+    def visitMutableCstrVarDecl(self, ctx:BKOOLParser.MutableCstrVarDeclContext):
+        # mutableCstrVarDecl: attributeType (ID mutableCstrVarInit) (COMMA (ID mutableCstrVarInit))* S_COLON;
+        type = ctx.attributeType().accept(self)
+        def mapMutable(id, expr):
+            return VarDecl(Id(id.getText()), type, expr.accept(self))
+        return list(map(mapMutable, ctx.ID(), ctx.mutableCstrVarInit()))
+
+
+    def visitMutableObjCstrVarDecl(self, ctx:BKOOLParser.MutableObjCstrVarDeclContext):
+        # mutableObjCstrVarDecl: ID (LSB INTEGER_LITERAL RSB)? (ID mutableObjCstrVarInit) (COMMA (ID mutableObjCstrVarInit))* S_COLON;
+        type = ClassType(Id(ctx.ID(0).getText()))
+        if ctx.LSB():
+            type = ArrayType(IntLiteral(int(ctx.INTEGER_LITERAL().getText())), ClassType(Id(ctx.ID(0).getText())))
+        def mapMutable(id, expr):
+            return VarDecl(Id(id.getText()), type, expr.accept(self))
+        return list(map(mapMutable, ctx.ID()[1:], ctx.mutableObjCstrVarInit()))
+    
+
+    def visitImmutableCstrVarInit(self, ctx:BKOOLParser.ImmutableCstrVarInitContext):
+        # immutableCstrVarInit: (EQUAL_SIGN exp);
+        return ctx.exp().accept(self)
+
+
+    def visitMutableCstrVarInit(self, ctx:BKOOLParser.MutableCstrVarInitContext):
+        # mutableCstrVarInit: (EQUAL_SIGN exp)?;
+        return ctx.exp().accept(self) if ctx.EQUAL_SIGN() else NullLiteral()
+
+
+    def visitMutableObjCstrVarInit(self, ctx:BKOOLParser.MutableObjCstrVarInitContext):
+        # mutableObjCstrVarInit: (EQUAL_SIGN objInit)?;
+        return ctx.objInit().accept(self) if ctx.EQUAL_SIGN() else NullLiteral()
     
     def visitVarDecl(self, ctx:BKOOLParser.VarDeclContext):
         # varDecl: (immutableVarDecl | mutableVarDecl | mutableObjVarDecl);
@@ -225,7 +282,7 @@ class ASTGeneration(BKOOLVisitor):
             return ctx.mutableObjVarDecl().accept(self)
     
     def visitImmutableVarDecl(self, ctx:BKOOLParser.ImmutableVarDeclContext):
-        # immutableVarDecl: FINAL? attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
+        # immutableVarDecl: FINAL attributeType (ID immutableInitialize) (COMMA (ID immutableInitialize))* S_COLON;
         type = ctx.attributeType().accept(self)
         def mapImmutable(id, expr):
             return ConstDecl(Id(id.getText()), type, expr.accept(self))
@@ -252,8 +309,16 @@ class ASTGeneration(BKOOLVisitor):
         return Assign(ctx.lhs().accept(self), ctx.exp().accept(self))
     
     def visitLhs(self, ctx:BKOOLParser.LhsContext):
-        # lhs: (arrayVar | scalarVar | attrAccess);
-        return ctx.exp().accept(self)
+        #lhs: ID | (ID | THIS) DOT (ID (LSB exp RSB)?) | ID LSB exp RSB;
+        if ctx.getChildCount() == 1:
+            return Id(ctx.ID(0).getText())
+        elif ctx.getChildCount() == 4:
+            return ArrayCell(Id(ctx.ID(0).getText()), ctx.exp().accept(self))
+        else:
+            if ctx.getChildCount() == 3:
+                return FieldAccess(Id(ctx.getChild(0).getText()) if ctx.ID() else SelfLiteral(),Id(ctx.getChild(2).getText()))
+            else:
+                return FieldAccess(Id(ctx.getChild(0).getText()) if ctx.ID() else SelfLiteral(), ArrayCell(Id(ctx.getChild(2).getText()), ctx.exp().accept(self)))
     
     def visitInvokeStmt(self, ctx: BKOOLParser.InvokeStmtContext):
         # invokeStmt: exp DOT ID listExp S_COLON;

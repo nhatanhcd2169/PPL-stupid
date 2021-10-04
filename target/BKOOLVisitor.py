@@ -169,6 +169,16 @@ class BKOOLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BKOOLParser#cstrBlockStmt.
+    def visitCstrBlockStmt(self, ctx:BKOOLParser.CstrBlockStmtContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#cstrVarDecl.
+    def visitCstrVarDecl(self, ctx:BKOOLParser.CstrVarDeclContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BKOOLParser#varDecl.
     def visitVarDecl(self, ctx:BKOOLParser.VarDeclContext):
         return self.visitChildren(ctx)
@@ -186,6 +196,36 @@ class BKOOLVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BKOOLParser#mutableObjVarDecl.
     def visitMutableObjVarDecl(self, ctx:BKOOLParser.MutableObjVarDeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#immutableCstrVarDecl.
+    def visitImmutableCstrVarDecl(self, ctx:BKOOLParser.ImmutableCstrVarDeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#mutableCstrVarDecl.
+    def visitMutableCstrVarDecl(self, ctx:BKOOLParser.MutableCstrVarDeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#mutableObjCstrVarDecl.
+    def visitMutableObjCstrVarDecl(self, ctx:BKOOLParser.MutableObjCstrVarDeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#immutableCstrVarInit.
+    def visitImmutableCstrVarInit(self, ctx:BKOOLParser.ImmutableCstrVarInitContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#mutableCstrVarInit.
+    def visitMutableCstrVarInit(self, ctx:BKOOLParser.MutableCstrVarInitContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BKOOLParser#mutableObjCstrVarInit.
+    def visitMutableObjCstrVarInit(self, ctx:BKOOLParser.MutableObjCstrVarInitContext):
         return self.visitChildren(ctx)
 
 
