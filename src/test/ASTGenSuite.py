@@ -3,6 +3,7 @@ from TestUtils import TestAST
 from AST import *
 
 class ASTGenSuite(unittest.TestCase):
+    
     def test_1(self):
         input = """class kori {}"""
         expect = """Program([ClassDecl(Id(kori),[])])"""
@@ -815,6 +816,138 @@ class ASTGenSuite(unittest.TestCase):
         }"""
         expect = "Program([ClassDecl(Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[])),MethodDecl(Id(label),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Animal's data:)])]))]),ClassDecl(Id(Bird),Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Moves by flying.)])])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Eats birdfood.)])]))]),ClassDecl(Id(Fish),Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Moves by swimming.)])])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Eats seafood.)])]))]),ClassDecl(Id(TestBird),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(myBird),ClassType(Id(Animal)))],[AssignStmt(Id(myBird),NewExpr(Id(Bird),[])),Call(Id(myBird),Id(label),[]),Call(Id(myBird),Id(move),[]),Call(Id(myBird),Id(eat),[])]))]),ClassDecl(Id(TestFish),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(myFish),ClassType(Id(Animal)))],[AssignStmt(Id(myFish),NewExpr(Id(Fish),[])),Call(Id(myFish),Id(label),[]),Call(Id(myFish),Id(move),[]),Call(Id(myFish),Id(eat),[])]))])])"
         self.assertTrue(TestAST.test(input,expect,359))
+        
+    def test_61(self):
+        input = """
+            class Shape {
+                static final int numOfShape = 0;
+                final int immuAttribute = 0;
+                float length,width;
+                static int getNumOfShape() {
+                    return numOfShape;
+                }
+            }
+        """
+        expect = "Program([ClassDecl(Id(Shape),[AttributeDecl(Static,ConstDecl(Id(numOfShape),IntType,IntLit(0))),AttributeDecl(Instance,ConstDecl(Id(immuAttribute),IntType,IntLit(0))),AttributeDecl(Instance,VarDecl(Id(length),FloatType)),AttributeDecl(Instance,VarDecl(Id(width),FloatType)),MethodDecl(Id(getNumOfShape),Static,[],IntType,Block([],[Return(Id(numOfShape))]))])])"
+        self.assertTrue(TestAST.test(input,expect,360))
+    def test_62(self):
+        input = """class test {
+            void main() {
+                a := +a;
+            }
+        }"""
+        expect = "Program([ClassDecl(Id(test),[MethodDecl(Id(main),Static,[],VoidType,Block([],[AssignStmt(Id(a),UnaryOp(+,Id(a)))]))])])"
+        self.assertTrue(TestAST.test(input,expect,361))
+        
+    def test_63(self):
+        input = """class test {
+                void foo(int a,b;float c) {
+                string _str_,o,c;
+                }
+            }"""
+        expect = """Program([ClassDecl(Id(test),[MethodDecl(Id(foo),Instance,[param(Id(a),IntType),param(Id(b),IntType),param(Id(c),FloatType)],VoidType,Block([VarDecl(Id(_str_),StringType),VarDecl(Id(o),StringType),VarDecl(Id(c),StringType)],[]))])])"""
+        self.assertTrue(TestAST.test(input,expect,362))
+
+    def test_64(self):
+        input = """
+        class ABC /* extends ABC {}
+        {string terrorist = "ho" */
+        {}"""
+        expect = """Program([ClassDecl(Id(ABC),[])])"""
+        self.assertTrue(TestAST.test(input,expect,363))
+        
+    def test_65(self):
+        input = """class PPL {
+            string PPL = "Principles of Programming Languages";
+            string lecturer = "Dr. Nguyen Hua Phung";
+            void main(){
+                string con;
+                con := lecturer ^ " - ";
+                }
+            }"""
+        expect = """Program([ClassDecl(Id(PPL),[AttributeDecl(Instance,VarDecl(Id(PPL),StringType,StringLit(Principles of Programming Languages))),AttributeDecl(Instance,VarDecl(Id(lecturer),StringType,StringLit(Dr. Nguyen Hua Phung))),MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(con),StringType)],[AssignStmt(Id(con),BinaryOp(^,Id(lecturer),StringLit( - )))]))])])"""
+        self.assertTrue(TestAST.test(input,expect,364))
+
+    def test_66(self):
+        input = """class PPL {
+            string PPL = "Principles of Programming Languages";
+            string lecturer = "Dr. Nguyen Hua Phung";
+            void main(){
+                string con;
+                con := lecturer ^ " - ";
+                con := con ^ PPL;
+                }
+            }"""
+        expect = """Program([ClassDecl(Id(PPL),[AttributeDecl(Instance,VarDecl(Id(PPL),StringType,StringLit(Principles of Programming Languages))),AttributeDecl(Instance,VarDecl(Id(lecturer),StringType,StringLit(Dr. Nguyen Hua Phung))),MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(con),StringType)],[AssignStmt(Id(con),BinaryOp(^,Id(lecturer),StringLit( - ))),AssignStmt(Id(con),BinaryOp(^,Id(con),Id(PPL)))]))])])"""
+        self.assertTrue(TestAST.test(input,expect,365))
+
+    def test_67(self):
+        input = """class test {
+                        int foo() {
+                            a [(1 + 2 * 3 - 4 / 5 && 6 || 7)*(1+2+3)-(4+5*6/abc && !(123))] := a[(((-5)))];
+                        }
+                    }"""
+        expect = """Program([ClassDecl(Id(test),[MethodDecl(Id(foo),Instance,[],IntType,Block([],[AssignStmt(ArrayCell(Id(a),BinaryOp(-,BinaryOp(*,BinaryOp(||,BinaryOp(&&,BinaryOp(-,BinaryOp(+,IntLit(1),BinaryOp(*,IntLit(2),IntLit(3))),BinaryOp(/,IntLit(4),IntLit(5))),IntLit(6)),IntLit(7)),BinaryOp(+,BinaryOp(+,IntLit(1),IntLit(2)),IntLit(3))),BinaryOp(&&,BinaryOp(+,IntLit(4),BinaryOp(/,BinaryOp(*,IntLit(5),IntLit(6)),Id(abc))),UnaryOp(!,IntLit(123))))),ArrayCell(Id(a),UnaryOp(-,IntLit(5))))]))])])"""
+        self.assertTrue(TestAST.test(input,expect,366))
+        
+    def test_68(self):
+        input = """class test {
+                    int foo() {
+                        for i := 1 to 10+5-4*e+x do break;
+                    }
+                }"""
+        expect = """Program([ClassDecl(Id(test),[MethodDecl(Id(foo),Instance,[],IntType,Block([],[For(Id(i),IntLit(1),BinaryOp(+,BinaryOp(-,BinaryOp(+,IntLit(10),IntLit(5)),BinaryOp(*,IntLit(4),Id(e))),Id(x)),True,Break])]))])])"""
+        self.assertTrue(TestAST.test(input,expect,367))
+        
+    def test_69(self):
+        input = """
+        class Phuong 
+        {
+            int x;
+            {
+                int x;
+                {
+                    int x = 10;
+                    {
+                        final int x = 10;
+                        {
+                            final float x = 4.12342421312312e-234125;
+                        }
+                    }
+                }
+            }
+        }"""
+        expect = """Program([ClassDecl(Id(Phuong),[AttributeDecl(Instance,VarDecl(Id(x),IntType)),AttributeDecl(Instance,VarDecl(Id(x),IntType)),AttributeDecl(Instance,VarDecl(Id(x),IntType,IntLit(10))),AttributeDecl(Instance,ConstDecl(Id(x),IntType,IntLit(10))),AttributeDecl(Instance,ConstDecl(Id(x),FloatType,FloatLit(0.0)))])])"""
+        self.assertTrue(TestAST.test(input,expect,368))
+
+    def test_70(self):
+        input = """class extends extends ABC{}"""
+        expect = """Program([ClassDecl(Id(<missing ID>),Id(ABC),[])])"""
+        self.assertTrue(TestAST.test(input,expect,369))
+        
+    def test_71(self):
+        input = """class Main extends extends{}"""
+        expect = """Program([ClassDecl(Id(Main),[])])"""
+        self.assertTrue(TestAST.test(input,expect,370))
+        
+    def test_72(self):
+        input = """class Main extends Extends {}"""
+        expect = """Program([ClassDecl(Id(Main),Id(Extends),[])])"""
+        self.assertTrue(TestAST.test(input,expect,371))
+
+    def test_73(self):
+        input = """class ABC {
+            int Main() {}
+            }"""
+        expect = """Program([ClassDecl(Id(ABC),[MethodDecl(Id(Main),Instance,[],IntType,Block([],[]))])])"""
+        self.assertTrue(TestAST.test(input,expect,372))
+        
+    def test_74(self):
+        input = """class Understandable extends Have_A_Nice_Day {
+                void Void() {}
+            }"""
+        expect = """Program([ClassDecl(Id(Understandable),Id(Have_A_Nice_Day),[MethodDecl(Id(Void),Instance,[],VoidType,Block([],[]))])])"""
+        self.assertTrue(TestAST.test(input,expect,373))
         
     def test_100(self):
         input = """ 
