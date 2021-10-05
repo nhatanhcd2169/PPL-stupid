@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-# from main.bkool.utils.AST import *
+from main.bkool.utils.AST import *
 
 class ASTGeneration(BKOOLVisitor):
     
