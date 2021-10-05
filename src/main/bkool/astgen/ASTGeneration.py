@@ -340,7 +340,7 @@ class ASTGeneration(BKOOLVisitor):
         # forStmtWithoutReturn: FOR scalarVar ASSIGN exp (TO | DOWNTO) exp DO stmtWithoutReturn;
         return For(ctx.scalarVar().accept(self), ctx.exp(0).accept(self), ctx.exp(1).accept(self), True if ctx.TO() else False, ctx.stmtWithoutReturn().accept(self))
     
-    def visit   (self, ctx: BKOOLParser.ScalarVarContext):
+    def visitScalarVar(self, ctx: BKOOLParser.ScalarVarContext):
         # scalarVar: ID
         return Id(ctx.ID().getText())
     
