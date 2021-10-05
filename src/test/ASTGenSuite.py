@@ -816,3 +816,57 @@ class ASTGenSuite(unittest.TestCase):
         expect = "Program([ClassDecl(Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[])),MethodDecl(Id(label),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Animal's data:)])]))]),ClassDecl(Id(Bird),Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Moves by flying.)])])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Eats birdfood.)])]))]),ClassDecl(Id(Fish),Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Moves by swimming.)])])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Eats seafood.)])]))]),ClassDecl(Id(TestBird),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(myBird),ClassType(Id(Animal)))],[AssignStmt(Id(myBird),NewExpr(Id(Bird),[])),Call(Id(myBird),Id(label),[]),Call(Id(myBird),Id(move),[]),Call(Id(myBird),Id(eat),[])]))]),ClassDecl(Id(TestFish),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(myFish),ClassType(Id(Animal)))],[AssignStmt(Id(myFish),NewExpr(Id(Fish),[])),Call(Id(myFish),Id(label),[]),Call(Id(myFish),Id(move),[]),Call(Id(myFish),Id(eat),[])]))])])"
         self.assertTrue(TestAST.test(input,expect,359))
         
+    def test_100(self):
+        input = """ 
+        class Point 
+        {
+            int x, y;
+            static float length(Point a, Point b) 
+            {
+                return Math.sqrt(Math.sqr(a.x - b.x) - (a.y - b.y));
+            }
+        }
+        class Triangle 
+        {
+            Point point1, point2, point3;
+            float edge1, edge2, edge3;
+            Triangle(Point p1, Point p2, Point p3) 
+            {
+                this.point1 := p1;
+                this.point2 := p2;
+                this.point3 := p3;
+                this.edge1 := Point.length(p1, p2);
+                this.edge2 := Point.length(p2, p3);
+                this.edge3 := Point.length(p3, p1);
+            }
+            float circumference() 
+            {
+                return (this.edge1 + this.edge2 + this.edge3) / 2;
+            }
+            float area() 
+            {
+                float p;
+                p := this.circumference();
+                return Math.sqrt(p * (p - this.edge1) * (p - this.edge2) * (p - this.edge3));
+            }
+        } 
+        class Program
+        {
+            void main() 
+            {
+                Point p1, p2, p3;
+                Triangle abc;
+                float area;
+                p1 := new Point(0, 0);
+                p2 := new Point(0, 1);
+                p3 := new Point(1, 0);
+                abc := new Triangle(p1, p2, p3);
+                area := abc.area();
+                io.writeLn("Area of triangle: ", area);
+            }
+        } 
+        """
+        expect = """Program([ClassDecl(Id(Point),[AttributeDecl(Instance,VarDecl(Id(x),IntType)),AttributeDecl(Instance,VarDecl(Id(y),IntType)),MethodDecl(Id(length),Static,[param(Id(a),ClassType(Point)),param(Id(b),ClassType(Point))],FloatType,Block([],[Return(CallExpr(Id(Math),Id(sqrt),[BinaryOp(-,CallExpr(Id(Math),Id(sqr),[BinaryOp(-,FieldAccess(Id(a),Id(x)),FieldAccess(Id(b),Id(x)))]),BinaryOp(-,FieldAccess(Id(a),Id(y)),FieldAccess(Id(b),Id(y))))]))]))]),ClassDecl(Id(Triangle),[AttributeDecl(Instance,VarDecl(Id(point1),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(point2),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(point3),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(edge1),FloatType)),AttributeDecl(Instance,VarDecl(Id(edge2),FloatType)),AttributeDecl(Instance,VarDecl(Id(edge3),FloatType)),MethodDecl(Id("<init>"),Instance,[param(Id(p1),ClassType(Point)),param(Id(p2),ClassType(Point)),param(Id(p3),ClassType(Point))],Block([],[AssignStmt(FieldAccess(Id(this),Id(point1)),Id(p1)),AssignStmt(FieldAccess(Id(this),Id(point2)),Id(p2)),AssignStmt(FieldAccess(Id(this),Id(point3)),Id(p3)),AssignStmt(FieldAccess(Id(this),Id(edge1)),CallExpr(Id(Point),Id(length),[Id(p1),Id(p2)])),AssignStmt(FieldAccess(Id(this),Id(edge2)),CallExpr(Id(Point),Id(length),[Id(p2),Id(p3)])),AssignStmt(FieldAccess(Id(this),Id(edge3)),CallExpr(Id(Point),Id(length),[Id(p3),Id(p1)]))])),MethodDecl(Id(circumference),Instance,[],FloatType,Block([],[Return(BinaryOp(/,BinaryOp(+,BinaryOp(+,FieldAccess(Self(),Id(edge1)),FieldAccess(Self(),Id(edge2))),FieldAccess(Self(),Id(edge3))),IntLit(2)))])),MethodDecl(Id(area),Instance,[],FloatType,Block([VarDecl(Id(p),FloatType)],[AssignStmt(Id(p),CallExpr(Self(),Id(circumference),[])),Return(CallExpr(Id(Math),Id(sqrt),[BinaryOp(*,BinaryOp(*,BinaryOp(*,Id(p),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge1)))),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge2)))),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge3))))]))]))]),ClassDecl(Id(Program),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(p1),ClassType(Id(Point))),VarDecl(Id(p2),ClassType(Id(Point))),VarDecl(Id(p3),ClassType(Id(Point))),VarDecl(Id(abc),ClassType(Id(Triangle))),VarDecl(Id(area),FloatType)],[AssignStmt(Id(p1),NewExpr(Id(Point),[IntLit(0),IntLit(0)])),AssignStmt(Id(p2),NewExpr(Id(Point),[IntLit(0),IntLit(1)])),AssignStmt(Id(p3),NewExpr(Id(Point),[IntLit(1),IntLit(0)])),AssignStmt(Id(abc),NewExpr(Id(Triangle),[Id(p1),Id(p2),Id(p3)])),AssignStmt(Id(area),CallExpr(Id(abc),Id(area),[])),Call(Id(io),Id(writeLn),[StringLit(Area of triangle: ),Id(area)])]))])])"""
+        self.assertTrue(TestAST.test(input,expect,399))
+        
+        
