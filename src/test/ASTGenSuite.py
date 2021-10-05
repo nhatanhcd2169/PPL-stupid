@@ -760,3 +760,59 @@ class ASTGenSuite(unittest.TestCase):
         expect = "Program([ClassDecl(Id(test),[MethodDecl(Id(foo),Instance,[],IntType,Block([VarDecl(Id(a),ArrayType(3,IntType),[IntLit(5),IntLit(6),BooleanLit(True)])],[]))])])"
         self.assertTrue(TestAST.test(input,expect,358))
         
+    def test_60(self):
+        input = """
+        class Animal 
+        {
+            void move(){}
+            void eat(){}
+            void label() {
+                System.out.println("Animal's data:");
+            }
+        }
+        class Bird extends Animal 
+        {
+
+            void move() {
+                System.out.println("Moves by flying.");
+            }
+            void eat() {
+                System.out.println("Eats birdfood.");
+            }	 
+        }
+
+        class Fish extends Animal 
+        {
+                void move() {
+                    System.out.println("Moves by swimming.");
+                }
+                void eat() {
+                    System.out.println("Eats seafood.");
+                }
+        }
+        class TestBird 
+        {
+            void main() {
+                Animal myBird;
+                myBird := new Bird();
+
+                myBird.label();
+                myBird.move();
+                myBird.eat();
+            }
+        }
+
+        class TestFish {
+            void main() 
+            {
+                Animal myFish;
+                myFish := new Fish();
+
+                myFish.label();
+                myFish.move();
+                myFish.eat();
+            }
+        }"""
+        expect = "Program([ClassDecl(Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[])),MethodDecl(Id(label),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Animal's data:)])]))]),ClassDecl(Id(Bird),Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Moves by flying.)])])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Eats birdfood.)])]))]),ClassDecl(Id(Fish),Id(Animal),[MethodDecl(Id(move),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Moves by swimming.)])])),MethodDecl(Id(eat),Instance,[],VoidType,Block([],[Call(FieldAccess(Id(System),Id(out)),Id(println),[StringLit(Eats seafood.)])]))]),ClassDecl(Id(TestBird),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(myBird),ClassType(Id(Animal)))],[AssignStmt(Id(myBird),NewExpr(Id(Bird),[])),Call(Id(myBird),Id(label),[]),Call(Id(myBird),Id(move),[]),Call(Id(myBird),Id(eat),[])]))]),ClassDecl(Id(TestFish),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(myFish),ClassType(Id(Animal)))],[AssignStmt(Id(myFish),NewExpr(Id(Fish),[])),Call(Id(myFish),Id(label),[]),Call(Id(myFish),Id(move),[]),Call(Id(myFish),Id(eat),[])]))])])"
+        self.assertTrue(TestAST.test(input,expect,359))
+        
