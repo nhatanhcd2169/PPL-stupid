@@ -634,11 +634,14 @@ class ParserSuite(unittest.TestCase):
         expect = "Error on line 3 col 34: )"
         self.assertTrue(TestParser.test(input,expect,276))    
     def test_77(self):
-        input = """class test {
-	int foo(){
-    a := b / 2 * n / 4 && 5 % g || 2 * 9 / 4 % 2;
-	}
-}"""
+        input = """
+        class test 
+        {
+            int foo()
+            {
+                a := b / 2 * n / 4 && 5 % g || 2 * 9 / 4 % 2;
+            }
+        }"""
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,277))    
     def test_78(self):
