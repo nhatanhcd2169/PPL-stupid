@@ -36,7 +36,7 @@ class ASTGenSuite(unittest.TestCase):
                 }
             }
         }"""
-        expect = """Program([ClassDecl(Id(kori),Id(phuong),[MethodDecl(Id("<init>"),Instance,[],Block([],[])),MethodDecl(Id(count),Instance,[param(Id(a),IntType),param(Id(b),ClassType(Shape)),param(Id(c),StringType),param(Id(d),StringType),param(Id(e),StringType)],IntType,Block([],[])),MethodDecl(Id(getFloatArray),Instance,[],ArrayType(5,FloatType),Block([],[])),MethodDecl(Id(main),Static,[],VoidType,Block([],[AssignStmt(Id(a),IntLit(2)),AssignStmt(FieldAccess(Id(a),Id(b)),IntLit(5)),For(Id(x),IntLit(5),IntLit(10),True,AssignStmt(Id(x),BinaryOp(+,Id(x),IntLit(5)))])])),MethodDecl(Id(okay),Instance,[],IntType,Block([],[AssignStmt(Id(a),IntLit(2)),AssignStmt(FieldAccess(Id(a),Id(b)),IntLit(5)),For(Id(x),IntLit(5),IntLit(10),True,Block([],[Break,If(BinaryOp(==,BinaryOp(+,Id(a),Id(b)),IntLit(5)),AssignStmt(Id(a),Id(b))),Continue,Return(BinaryOp(<,Id(x),IntLit(5)))])])]))])])"""
+        expect = """Program([ClassDecl(Id(kori),Id(phuong),[MethodDecl(Id("<init>"),Instance,[],Block([],[])),MethodDecl(Id(count),Instance,[param(Id(a),IntType),param(Id(b),ClassType(Id(Shape))),param(Id(c),StringType),param(Id(d),StringType),param(Id(e),StringType)],IntType,Block([],[])),MethodDecl(Id(getFloatArray),Instance,[],ArrayType(5,FloatType),Block([],[])),MethodDecl(Id(main),Static,[],VoidType,Block([],[AssignStmt(Id(a),IntLit(2)),AssignStmt(FieldAccess(Id(a),Id(b)),IntLit(5)),For(Id(x),IntLit(5),IntLit(10),True,AssignStmt(Id(x),BinaryOp(+,Id(x),IntLit(5)))])])),MethodDecl(Id(okay),Instance,[],IntType,Block([],[AssignStmt(Id(a),IntLit(2)),AssignStmt(FieldAccess(Id(a),Id(b)),IntLit(5)),For(Id(x),IntLit(5),IntLit(10),True,Block([],[Break,If(BinaryOp(==,BinaryOp(+,Id(a),Id(b)),IntLit(5)),AssignStmt(Id(a),Id(b))),Continue,Return(BinaryOp(<,Id(x),IntLit(5)))])])]))])])"""
         self.assertTrue(TestAST.test(input,expect,301))
     
     def test_3(self):
@@ -163,7 +163,7 @@ class ASTGenSuite(unittest.TestCase):
                 int[5] kori(int copy, Phuong isPhuong) {}
             }
         """
-        expect = "Program([ClassDecl(Id(a),[MethodDecl(Id(kori),Instance,[param(Id(copy),IntType),param(Id(isPhuong),ClassType(Phuong))],ArrayType(5,IntType),Block([],[]))])])"
+        expect = "Program([ClassDecl(Id(a),[MethodDecl(Id(kori),Instance,[param(Id(copy),IntType),param(Id(isPhuong),ClassType(Id(Phuong)))],ArrayType(5,IntType),Block([],[]))])])" 
         self.assertTrue(TestAST.test(input,expect,311))
         
     def test_13(self):
@@ -173,7 +173,7 @@ class ASTGenSuite(unittest.TestCase):
                 Shape kori(int ok) {}
             }
         """
-        expect = "Program([ClassDecl(Id(a),[MethodDecl(Id(kori),Instance,[param(Id(ok),IntType)],ClassType(Shape),Block([],[]))])])"
+        expect = "Program([ClassDecl(Id(a),[MethodDecl(Id(kori),Instance,[param(Id(ok),IntType)],ClassType(Id(Shape)),Block([],[]))])])"
         self.assertTrue(TestAST.test(input,expect,312))
         
     def test_14(self):
@@ -949,6 +949,214 @@ class ASTGenSuite(unittest.TestCase):
         expect = """Program([ClassDecl(Id(Understandable),Id(Have_A_Nice_Day),[MethodDecl(Id(Void),Instance,[],VoidType,Block([],[]))])])"""
         self.assertTrue(TestAST.test(input,expect,373))
         
+    def test_75(self):
+        input = """class Final extends Static {
+        }"""
+        expect = """Program([ClassDecl(Id(Final),Id(Static),[])])"""
+        self.assertTrue(TestAST.test(input,expect,374))
+        
+    def test_76(self):
+        input = """class static extends Final {
+        }"""
+        expect = """Program([ClassDecl(Id(Final),[])])"""
+        self.assertTrue(TestAST.test(input,expect,375))
+
+    def test_77(self):
+        input = """class Static extends final {
+        }"""
+        expect = """Program([ClassDecl(Id(Static),[])])"""
+        self.assertTrue(TestAST.test(input,expect,376))
+        
+    def test_78(self):
+        input = """class __init__ {
+        }"""
+        expect = """Program([ClassDecl(Id(__init__),[])])"""
+        self.assertTrue(TestAST.test(input,expect,377))
+        
+    def test_79(self):
+        input = """class __init__ extends 0123 {
+        }"""
+        expect = """Program([ClassDecl(Id(__init__),[])])"""
+        self.assertTrue(TestAST.test(input,expect,378))
+        
+    def test_80(self):
+        input = """class ABC 
+        {
+            bool check() { 
+                if ("i" + "love" + "you" == "i love you") then this.print("ABC loves you");
+            }
+        }"""
+        expect = "Program([ClassDecl(Id(ABC),[MethodDecl(Id(check),Instance,[],ClassType(Id(bool)),Block([],[If(BinaryOp(==,BinaryOp(+,BinaryOp(+,StringLit(i),StringLit(love)),StringLit(you)),StringLit(i love you)),Call(Self(),Id(print),[StringLit(ABC loves you)]))]))])])"      
+        self.assertTrue(TestAST.test(input,expect,379))
+        
+    def test_81(self):
+        input = """class phuong extends kori {} 
+        class ABC{}class BCA
+        {
+            bool check() { 
+                if ("i" + "love" + "you" == "i love you") then this.print("ABC loves you");
+            }
+        }"""
+        expect = "Program([ClassDecl(Id(phuong),Id(kori),[]),ClassDecl(Id(ABC),[]),ClassDecl(Id(BCA),[MethodDecl(Id(check),Instance,[],ClassType(Id(bool)),Block([],[If(BinaryOp(==,BinaryOp(+,BinaryOp(+,StringLit(i),StringLit(love)),StringLit(you)),StringLit(i love you)),Call(Self(),Id(print),[StringLit(ABC loves you)]))]))])])"      
+        self.assertTrue(TestAST.test(input,expect,380))    
+        
+    def test_82(self):
+        input = """class phuong extends kori {} 
+        class ABC {}
+        class BCA
+        {
+            void check() 
+            {
+                {
+                    this.id := id;
+                }
+            }
+        }"""
+        expect = """Program([ClassDecl(Id(phuong),Id(kori),[]),ClassDecl(Id(ABC),[]),ClassDecl(Id(BCA),[MethodDecl(Id(check),Instance,[],VoidType,Block([],[Block([],[AssignStmt(FieldAccess(Id(this),Id(id)),Id(id))])]))])])"""
+        self.assertTrue(TestAST.test(input,expect,381))
+        
+    def test_83(self):
+        input = """class phuong extends kori
+        {
+            extend hello;
+        }"""
+        expect = """Program([ClassDecl(Id(phuong),Id(kori),[AttributeDecl(Instance,VarDecl(Id(hello),ClassType(Id(extend))))])])"""
+        self.assertTrue(TestAST.test(input,expect,382))
+        
+    def test_84(self):
+        input = """class phuong extends kori
+        {
+            int extend;
+        }"""
+        expect = """Program([ClassDecl(Id(phuong),Id(kori),[AttributeDecl(Instance,VarDecl(Id(extend),IntType))])])"""
+        self.assertTrue(TestAST.test(input,expect,383))
+        
+    def test_85(self):
+        input = """class phuong extends kori
+        {
+            phuong(){
+                int luv = 0;
+                int luvStep = 1;
+                int mood;
+            }
+        }"""
+        expect = """Program([ClassDecl(Id(phuong),Id(kori),[MethodDecl(Id("<init>"),Instance,[],Block([VarDecl(Id(luv),IntType,IntLit(0)),VarDecl(Id(luvStep),IntType,IntLit(1)),VarDecl(Id(mood),IntType,NullLiteral())],[]))])])"""
+        self.assertTrue(TestAST.test(input,expect,384))
+    
+    def test_86(self):
+        input = """class phuong extends kori
+        {
+            extend(){}
+        }"""
+        expect = """Program([ClassDecl(Id(phuong),Id(kori),[MethodDecl(Id("<init>"),Instance,[],Block([],[]))])])"""
+        self.assertTrue(TestAST.test(input,expect,385))
+    
+    def test_87(self):
+        input = """class phuong extends kori
+        {
+            extends(){}
+        }"""
+        expect = """Program([ClassDecl(Id(phuong),Id(kori),[])])"""
+        self.assertTrue(TestAST.test(input,expect,386))    
+        
+    def test_88(self):
+        input = """"""
+        expect = """Program([])"""
+        self.assertTrue(TestAST.test(input,expect,387))  
+    def test_89(self):
+        input = """class k extends k
+        {
+        }"""
+        expect = """Program([ClassDecl(Id(k),Id(k),[])])"""
+        self.assertTrue(TestAST.test(input,expect,388))  
+    def test_90(self):
+        input = """class Class
+        {
+        }"""
+        expect = """Program([ClassDecl(Id(Class),[])])"""
+        self.assertTrue(TestAST.test(input,expect,389))  
+    def test_91(self):
+        input = """class phuong extends kori
+        {
+            Shape[5] Shape;
+        }"""
+        expect = """Program([ClassDecl(Id(phuong),Id(kori),[AttributeDecl(Instance,VarDecl(Id(Shape),ArrayType(5,ClassType(Id(Shape)))))])])"""
+        self.assertTrue(TestAST.test(input,expect,390))  
+    def test_92(self):
+        input = """class kori extends k
+        {
+            Main maIn(int ma1n, Main maiN) {}
+        }"""
+        expect = """Program([ClassDecl(Id(kori),Id(k),[MethodDecl(Id(maIn),Instance,[param(Id(ma1n),IntType),param(Id(maiN),ClassType(Id(Main)))],ClassType(Id(Main)),Block([],[]))])])"""
+        self.assertTrue(TestAST.test(input,expect,391))  
+    def test_93(self):
+        input = """class TEST
+        {
+            int a = 101.E7;
+        }"""
+        expect = """Program([ClassDecl(Id(TEST),[AttributeDecl(Instance,VarDecl(Id(a),IntType,FloatLit(1010000000.0)))])])"""
+        self.assertTrue(TestAST.test(input,expect,392))  
+    def test_94(self):
+        input = """class TEST
+        {
+            int a = 101.E7 + 99.E7;
+        }"""
+        expect = """Program([ClassDecl(Id(TEST),[AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),FloatLit(990000000.0))))])])"""
+        self.assertTrue(TestAST.test(input,expect,393))  
+    def test_95(self):
+        input = """class TEST
+        {
+            int a = 101.E7 + 99.E7 ^ "200.E7";
+        }"""
+        expect = """Program([ClassDecl(Id(TEST),[AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),BinaryOp(^,FloatLit(990000000.0),StringLit(200.E7)))))])])"""
+        self.assertTrue(TestAST.test(input,expect,394))  
+    def test_96(self):
+        input = """class TEST
+        {
+            int a = 101.E7 + 99.E7 ^ "200.E7" ^ "\t\t\t";
+        }"""
+        expect = """Program([ClassDecl(Id(TEST),[AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),BinaryOp(^,BinaryOp(^,FloatLit(990000000.0),StringLit(200.E7)),StringLit(			)))))])])"""
+        self.assertTrue(TestAST.test(input,expect,395))  
+    def test_97(self):
+        input = """class TEST
+        {
+            int a = 101.E7 + 99.E7 ^ "200.E7" ^ "\t\t\t";
+            {
+                int a = 101.E7 + 99.E7 ^ "200.E7" ^ "\t\t\t";
+            }
+        }"""
+        expect = """Program([ClassDecl(Id(TEST),[AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),BinaryOp(^,BinaryOp(^,FloatLit(990000000.0),StringLit(200.E7)),StringLit(			))))),AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),BinaryOp(^,BinaryOp(^,FloatLit(990000000.0),StringLit(200.E7)),StringLit(			)))))])])"""
+        self.assertTrue(TestAST.test(input,expect,396))  
+    def test_98(self):
+        input = """class TEST
+        {
+            int a = 101.E7 + 99.E7 ^ "200.E7" ^ "\t\t\t";
+            {
+                int a = 101.E7 + 99.E7 ^ "200.E7" ^ "\t\t\t";
+                {
+                    void main(){}
+                }
+            }
+        }"""
+        expect = """Program([ClassDecl(Id(TEST),[AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),BinaryOp(^,BinaryOp(^,FloatLit(990000000.0),StringLit(200.E7)),StringLit(			))))),AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),BinaryOp(^,BinaryOp(^,FloatLit(990000000.0),StringLit(200.E7)),StringLit(			))))),MethodDecl(Id(main),Static,[],VoidType,Block([],[]))])])"""
+        self.assertTrue(TestAST.test(input,expect,397))  
+    def test_99(self):
+        input = """class TEST
+        {
+            int a = 101.E7 + 99.E7 ^ "200.E7" ^ "\t\t\t";
+            {
+                int a = 101.E7 + 99.E7 ^ "200.E7" ^ "\t\t\t";
+                {
+                    void main(){
+                        {
+                            
+                        }
+                    }
+                }
+            }
+        }"""
+        expect = """Program([ClassDecl(Id(TEST),[AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),BinaryOp(^,BinaryOp(^,FloatLit(990000000.0),StringLit(200.E7)),StringLit(			))))),AttributeDecl(Instance,VarDecl(Id(a),IntType,BinaryOp(+,FloatLit(1010000000.0),BinaryOp(^,BinaryOp(^,FloatLit(990000000.0),StringLit(200.E7)),StringLit(			))))),MethodDecl(Id(main),Static,[],VoidType,Block([],[Block([],[])]))])])"""
+        self.assertTrue(TestAST.test(input,expect,398))  
     def test_100(self):
         input = """ 
         class Point 
@@ -999,7 +1207,5 @@ class ASTGenSuite(unittest.TestCase):
             }
         } 
         """
-        expect = """Program([ClassDecl(Id(Point),[AttributeDecl(Instance,VarDecl(Id(x),IntType)),AttributeDecl(Instance,VarDecl(Id(y),IntType)),MethodDecl(Id(length),Static,[param(Id(a),ClassType(Point)),param(Id(b),ClassType(Point))],FloatType,Block([],[Return(CallExpr(Id(Math),Id(sqrt),[BinaryOp(-,CallExpr(Id(Math),Id(sqr),[BinaryOp(-,FieldAccess(Id(a),Id(x)),FieldAccess(Id(b),Id(x)))]),BinaryOp(-,FieldAccess(Id(a),Id(y)),FieldAccess(Id(b),Id(y))))]))]))]),ClassDecl(Id(Triangle),[AttributeDecl(Instance,VarDecl(Id(point1),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(point2),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(point3),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(edge1),FloatType)),AttributeDecl(Instance,VarDecl(Id(edge2),FloatType)),AttributeDecl(Instance,VarDecl(Id(edge3),FloatType)),MethodDecl(Id("<init>"),Instance,[param(Id(p1),ClassType(Point)),param(Id(p2),ClassType(Point)),param(Id(p3),ClassType(Point))],Block([],[AssignStmt(FieldAccess(Id(this),Id(point1)),Id(p1)),AssignStmt(FieldAccess(Id(this),Id(point2)),Id(p2)),AssignStmt(FieldAccess(Id(this),Id(point3)),Id(p3)),AssignStmt(FieldAccess(Id(this),Id(edge1)),CallExpr(Id(Point),Id(length),[Id(p1),Id(p2)])),AssignStmt(FieldAccess(Id(this),Id(edge2)),CallExpr(Id(Point),Id(length),[Id(p2),Id(p3)])),AssignStmt(FieldAccess(Id(this),Id(edge3)),CallExpr(Id(Point),Id(length),[Id(p3),Id(p1)]))])),MethodDecl(Id(circumference),Instance,[],FloatType,Block([],[Return(BinaryOp(/,BinaryOp(+,BinaryOp(+,FieldAccess(Self(),Id(edge1)),FieldAccess(Self(),Id(edge2))),FieldAccess(Self(),Id(edge3))),IntLit(2)))])),MethodDecl(Id(area),Instance,[],FloatType,Block([VarDecl(Id(p),FloatType)],[AssignStmt(Id(p),CallExpr(Self(),Id(circumference),[])),Return(CallExpr(Id(Math),Id(sqrt),[BinaryOp(*,BinaryOp(*,BinaryOp(*,Id(p),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge1)))),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge2)))),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge3))))]))]))]),ClassDecl(Id(Program),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(p1),ClassType(Id(Point))),VarDecl(Id(p2),ClassType(Id(Point))),VarDecl(Id(p3),ClassType(Id(Point))),VarDecl(Id(abc),ClassType(Id(Triangle))),VarDecl(Id(area),FloatType)],[AssignStmt(Id(p1),NewExpr(Id(Point),[IntLit(0),IntLit(0)])),AssignStmt(Id(p2),NewExpr(Id(Point),[IntLit(0),IntLit(1)])),AssignStmt(Id(p3),NewExpr(Id(Point),[IntLit(1),IntLit(0)])),AssignStmt(Id(abc),NewExpr(Id(Triangle),[Id(p1),Id(p2),Id(p3)])),AssignStmt(Id(area),CallExpr(Id(abc),Id(area),[])),Call(Id(io),Id(writeLn),[StringLit(Area of triangle: ),Id(area)])]))])])"""
+        expect = """Program([ClassDecl(Id(Point),[AttributeDecl(Instance,VarDecl(Id(x),IntType)),AttributeDecl(Instance,VarDecl(Id(y),IntType)),MethodDecl(Id(length),Static,[param(Id(a),ClassType(Id(Point))),param(Id(b),ClassType(Id(Point)))],FloatType,Block([],[Return(CallExpr(Id(Math),Id(sqrt),[BinaryOp(-,CallExpr(Id(Math),Id(sqr),[BinaryOp(-,FieldAccess(Id(a),Id(x)),FieldAccess(Id(b),Id(x)))]),BinaryOp(-,FieldAccess(Id(a),Id(y)),FieldAccess(Id(b),Id(y))))]))]))]),ClassDecl(Id(Triangle),[AttributeDecl(Instance,VarDecl(Id(point1),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(point2),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(point3),ClassType(Id(Point)))),AttributeDecl(Instance,VarDecl(Id(edge1),FloatType)),AttributeDecl(Instance,VarDecl(Id(edge2),FloatType)),AttributeDecl(Instance,VarDecl(Id(edge3),FloatType)),MethodDecl(Id("<init>"),Instance,[param(Id(p1),ClassType(Id(Point))),param(Id(p2),ClassType(Id(Point))),param(Id(p3),ClassType(Id(Point)))],Block([],[AssignStmt(FieldAccess(Id(this),Id(point1)),Id(p1)),AssignStmt(FieldAccess(Id(this),Id(point2)),Id(p2)),AssignStmt(FieldAccess(Id(this),Id(point3)),Id(p3)),AssignStmt(FieldAccess(Id(this),Id(edge1)),CallExpr(Id(Point),Id(length),[Id(p1),Id(p2)])),AssignStmt(FieldAccess(Id(this),Id(edge2)),CallExpr(Id(Point),Id(length),[Id(p2),Id(p3)])),AssignStmt(FieldAccess(Id(this),Id(edge3)),CallExpr(Id(Point),Id(length),[Id(p3),Id(p1)]))])),MethodDecl(Id(circumference),Instance,[],FloatType,Block([],[Return(BinaryOp(/,BinaryOp(+,BinaryOp(+,FieldAccess(Self(),Id(edge1)),FieldAccess(Self(),Id(edge2))),FieldAccess(Self(),Id(edge3))),IntLit(2)))])),MethodDecl(Id(area),Instance,[],FloatType,Block([VarDecl(Id(p),FloatType)],[AssignStmt(Id(p),CallExpr(Self(),Id(circumference),[])),Return(CallExpr(Id(Math),Id(sqrt),[BinaryOp(*,BinaryOp(*,BinaryOp(*,Id(p),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge1)))),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge2)))),BinaryOp(-,Id(p),FieldAccess(Self(),Id(edge3))))]))]))]),ClassDecl(Id(Program),[MethodDecl(Id(main),Static,[],VoidType,Block([VarDecl(Id(p1),ClassType(Id(Point))),VarDecl(Id(p2),ClassType(Id(Point))),VarDecl(Id(p3),ClassType(Id(Point))),VarDecl(Id(abc),ClassType(Id(Triangle))),VarDecl(Id(area),FloatType)],[AssignStmt(Id(p1),NewExpr(Id(Point),[IntLit(0),IntLit(0)])),AssignStmt(Id(p2),NewExpr(Id(Point),[IntLit(0),IntLit(1)])),AssignStmt(Id(p3),NewExpr(Id(Point),[IntLit(1),IntLit(0)])),AssignStmt(Id(abc),NewExpr(Id(Triangle),[Id(p1),Id(p2),Id(p3)])),AssignStmt(Id(area),CallExpr(Id(abc),Id(area),[])),Call(Id(io),Id(writeLn),[StringLit(Area of triangle: ),Id(area)])]))])])"""
         self.assertTrue(TestAST.test(input,expect,399))
-        
-        

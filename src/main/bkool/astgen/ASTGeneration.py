@@ -3,7 +3,7 @@ from BKOOLParser import BKOOLParser
 from AST import *
 from functools import reduce
 
-from main.bkool.utils.AST import *
+# from main.bkool.utils.AST import *
 
 class ASTGeneration(BKOOLVisitor):
     
@@ -502,7 +502,6 @@ class ASTGeneration(BKOOLVisitor):
             return ctx.bool_literal().accept(self)
         else:
             return StringLiteral(ctx.STRING_LITERAL().getText())
-        
     def visitArray_literal(self, ctx:BKOOLParser.Array_literalContext):
         value = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.literal()[1:], [ctx.literal(0).accept(self)])
         return ArrayLiteral(value)
@@ -512,4 +511,4 @@ class ASTGeneration(BKOOLVisitor):
         return BooleanLiteral(bool(value))
     
     def visitClassName(self, ctx:BKOOLParser.ClassNameContext):
-        return ClassType(ctx.ID().getText())
+        return ClassType(Id(ctx.ID().getText()))
