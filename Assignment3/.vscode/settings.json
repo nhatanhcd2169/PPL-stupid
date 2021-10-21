@@ -1,0 +1,12 @@
+{
+    "python.formatting.provider": "black",
+    "python.analysis.extraPaths": [
+        "./src/main/bkool/utils",
+        "./src/test",
+        "./target",
+        "./src/main/bkool/parser",
+        "./src/main/bkool/astgen",
+        "./src/main/bkool/checker",
+        "./src/main/bkool/codegen"
+    ]
+}
