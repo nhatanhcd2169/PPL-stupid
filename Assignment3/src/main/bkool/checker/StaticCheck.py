@@ -55,10 +55,10 @@ class StaticChecker(BaseVisitor, Utils):
         name = ast.variable.accept(self, c)
         type = ast.varType.accept(self, c)
         init = None if ast.varInit == None else ast.varInit.accept(self, c)
-        
+        raise Undeclared(Variable(), "Debugging")
 
     def visitConstDecl(self, ast, c):
-        pass
+        raise Undeclared(Constant(), "Debugging")
 
     def lookupClass(self, name, env):
         if len(env) > 1:
@@ -96,13 +96,12 @@ class StaticChecker(BaseVisitor, Utils):
         pass
 
     def visitMethodDecl(self, ast, c):
-        raise Undeclared(Class(), "Debugging")
+        raise Undeclared(Method(), "Debugging")
 
     def visitAttributeDecl(self, ast, c):
         kind = ast.kind
         if (kind == Instance()):
             decl = ast.decl.accept(self, c)
-            return 
 
     def visitIntType(self, ast, c):
         return 'int'
