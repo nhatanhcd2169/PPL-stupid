@@ -10,6 +10,68 @@ class CheckerSuite(unittest.TestCase):
         self.assertTrue(TestChecker.test(input, expect, 400))
 
     def test_2(self):
-        input = "class a {}"
-        expect = ""
+        input = "class a {} class a {}"
+        expect = "Redeclared Class: a"
         self.assertTrue(TestChecker.test(input, expect, 401))
+        
+    def test_3(self):
+        input = """
+        class Ex 
+        {
+            int my1Var;
+            static float my1Var;
+        }"""
+        expect = "Redeclared Attribute: my1Var"
+        self.assertTrue(TestChecker.test(input, expect, 402))
+        
+    def test_4(self):
+        input = """
+        class Ex
+        {
+            int x = 10.0;
+        }
+        """
+        expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(x),IntType,FloatLit(10.0))"
+        self.assertTrue(TestChecker.test(input, expect, 403))
+        
+    def test_5(self):
+        input = """
+        class Ex 
+        {
+            void foo() 
+            {
+                continue;
+            }
+        }
+        """
+        expect = "Continue Not In Loop"
+        self.assertTrue(TestChecker.test(input, expect, 404))
+        
+    def test_6(self):
+        input = """
+        class Ex 
+        {
+            final int x = x;
+        }
+        """
+        expect = "Illegal Constant Expression: Id(x)"
+        self.assertTrue(TestChecker.test(input, expect, 405))
+        
+    def test_7(self):
+        input = """
+        class Ex
+        {
+            int[3] x = {2, 1.2, nil};
+        }
+        """
+        expect = "Illegal Array Literal: [IntLit(2),FloatLit(1.2),NullLiteral()]"
+        self.assertTrue(TestChecker.test(input, expect, 406))
+        
+    def test_8(self):
+        input = """
+        class a {}
+        class b extends a {}
+        class a {}
+        """
+        expect = "Redeclared Class: a"
+        self.assertTrue(TestChecker.test(input, expect, 407))

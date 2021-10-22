@@ -1,8 +1,8 @@
 cls
-"=============================ParserSuite=============================="
+# "=============================ParserSuite=============================="
 
 python run.py gen
-python run.py test ParserSuite
+# python run.py test ParserSuite
 ""
 ""
 "=============================ASTGenSuite=============================="

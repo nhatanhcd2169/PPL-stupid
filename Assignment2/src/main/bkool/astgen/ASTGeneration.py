@@ -61,6 +61,7 @@ class ASTGeneration(BKOOLVisitor):
     
     def visitMutableInitialize(self, ctx: BKOOLParser.MutableInitializeContext):
         # mutableInitialize: (EQUAL_SIGN exp)?;
+        print("I am here")
         return ctx.exp().accept(self) if ctx.exp() else None
     
     def visitMutableObjInitialize(self, ctx: BKOOLParser.MutableObjInitializeContext):
@@ -462,10 +463,12 @@ class ASTGeneration(BKOOLVisitor):
     def visitExp10(self, ctx: BKOOLParser.Exp10Context):
         # exp10: NEW exp10 listExp | exp11;
         if not ctx.NEW():
+            print("OH YEAH")
             return ctx.exp11().accept(self)
         return NewExpr(ctx.exp10().accept(self), ctx.listExp().accept(self))
     
     def visitExp11(self, ctx: BKOOLParser.Exp11Context):
+        print("I am in the path")
         # exp11: LB exp RB| literal | ID | methodInvoke | THIS | array_literal;
         if ctx.exp():
             return ctx.exp().accept(self)
@@ -503,9 +506,9 @@ class ASTGeneration(BKOOLVisitor):
         else:
             return StringLiteral(ctx.STRING_LITERAL().getText())
     def visitArray_literal(self, ctx:BKOOLParser.Array_literalContext):
+        print("I am in array literal")
         value = reduce(lambda acc, ele: acc + [ele.accept(self)], ctx.literal()[1:], [ctx.literal(0).accept(self)])
         return ArrayLiteral(value)
-        
     def visitBool_literal(self, ctx: BKOOLParser.Bool_literalContext):
         value = ctx.TRUE().getText() if ctx.TRUE() else ctx.FALSE().getText()
         return BooleanLiteral(bool(value))
