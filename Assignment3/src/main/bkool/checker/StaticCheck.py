@@ -3,7 +3,6 @@
 """
 from AST import *
 from Visitor import *
-from Utils import Utils
 from StaticError import *
 
 from main.bkool.utils.AST import *
@@ -22,7 +21,7 @@ class Symbol:
         self.value = value
 
 
-class StaticChecker(BaseVisitor, Utils):
+class StaticChecker(BaseVisitor):
 
     global_envi = [
         Symbol("readInt", MType([], IntType())),
@@ -46,29 +45,42 @@ class StaticChecker(BaseVisitor, Utils):
         return self.ast.accept(self, StaticChecker.global_envi)
 
     def visitProgram(self, ast, c):
-        # print("\n\nPROGRAM:", ast, "\n\n\n\n\n")
-        env = [{'global': c}]
-        print(env)
+        env = [{"global": c}]
         for x in ast.decl:
             env += [x.accept(self, env)]
 
+    def lookupVariable(self, name, env):
+        for index, item in enumerate(env):
+            if item:
+                if index > 0:
+                    print("I am iterating classes (class - local)")
+                else:
+                    print("I am in global scope")
+        return False, None
+
     def visitVarDecl(self, ast, c):
+        # print("ENV:", c)
         name = ast.variable.accept(self, c)
         type = ast.varType.accept(self, c)
-        init = None if ast.varInit == None else ast.varInit.accept(self, c)
+        init = ast.varInit.accept(self, c) if ast.varInit else None
+        # print("VAR:", name, type, init)
         raise Undeclared(Variable(), "Debugging")
 
     def visitConstDecl(self, ast, c):
+        name = ast.constant.accept(self, c)
+        type = ast.constType.accept(self, c)
+        init = ast.value.accept(self, c)
+        # print("CONST:", name, type, init)
         raise Undeclared(Constant(), "Debugging")
 
     def lookupClass(self, name, env):
         if len(env) > 1:
             for index, item in enumerate(env):
                 if index > 0 and item:
-                    if item['class'] == name:
+                    if item["class"] == name:
                         return True, index
         return False, None
-        
+
     def referenceClass(self, classname, parentname, env):
         lookupName = self.lookupClass(classname, env)
         lookupParent = self.lookupClass(parentname, env)
@@ -78,18 +90,18 @@ class StaticChecker(BaseVisitor, Utils):
             if not lookupParent[0]:
                 raise Undeclared(Class(), parentname)
             else:
-                return env[lookupParent[1]]['local']
+                return env[lookupParent[1]]["local"]
         return []
 
     def visitClassDecl(self, ast, c):
-        localVar = [c[0]]
+        localVar = [c[0]['global']]
         name = ast.classname.accept(self, c)
-        parent = ast.parentname.accept(self, c) if ast.parentname != None else None
+        parent = ast.parentname.accept(self, c) if ast.parentname else None
         localVar += self.referenceClass(name, parent, c)
         for mem in ast.memlist:
             mem.accept(self, localVar)
         c.append({"class": name, "local": localVar})
-        
+
     def visitStatic(self, ast, c):
         pass
 
@@ -101,29 +113,28 @@ class StaticChecker(BaseVisitor, Utils):
 
     def visitAttributeDecl(self, ast, c):
         kind = ast.kind
-        if (kind == Instance()):
-            decl = ast.decl.accept(self, c)
+        decl = ast.decl.accept(self, c)
 
     def visitIntType(self, ast, c):
-        return 'int'
+        return "int"
 
     def visitFloatType(self, ast, c):
-        return 'float'
+        return "float"
 
     def visitBoolType(self, ast, c):
-        return 'bool'
+        return "bool"
 
     def visitStringType(self, ast, c):
-        return 'string'
+        return "string"
 
     def visitVoidType(self, ast, c):
-        return 'void'
+        return "void"
 
     def visitArrayType(self, ast, c):
-        return 'array'
+        return "array"
 
     def visitClassType(self, ast, c):
-        return 'class'
+        return "class"
 
     def visitBinaryOp(self, ast, c):
         pass
