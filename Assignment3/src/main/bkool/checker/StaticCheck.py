@@ -47,7 +47,8 @@ class StaticChecker(BaseVisitor, Utils):
 
     def visitProgram(self, ast, c):
         # print("\n\nPROGRAM:", ast, "\n\n\n\n\n")
-        env = [{'global': []}]
+        env = [{'global': c}]
+        print(env)
         for x in ast.decl:
             env += [x.accept(self, env)]
 
