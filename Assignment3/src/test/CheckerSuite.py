@@ -58,12 +58,7 @@ class CheckerSuite(unittest.TestCase):
         self.assertTrue(TestChecker.test(input, expect, 405))
         
     def test_7(self):
-        input = """
-        class Ex
-        {
-            int[3] x = {2, 1.2, nil};
-        }
-        """
+        input = Program([ClassDecl(Id("Ex"),[AttributeDecl(Instance(),VarDecl(Id("x"),ArrayType(3,IntType()),ArrayLiteral([IntLiteral(2),FloatLiteral(1.2),NullLiteral()])))])])
         expect = "Illegal Array Literal: [IntLit(2),FloatLit(1.2),NullLiteral()]"
         self.assertTrue(TestChecker.test(input, expect, 406))
         
