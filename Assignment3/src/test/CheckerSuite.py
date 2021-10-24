@@ -28,7 +28,7 @@ class CheckerSuite(unittest.TestCase):
         input = """
         class Ex
         {
-            int x = 10.0;
+            final int x = 10.0;
         }
         """
         expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(x),IntType,FloatLit(10.0))"
