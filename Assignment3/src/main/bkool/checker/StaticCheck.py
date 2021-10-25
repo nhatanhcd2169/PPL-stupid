@@ -85,13 +85,12 @@ class StaticChecker(BaseVisitor, Stack):
             if item:
                 if index > 0:
                     if item["name"] == name:
-                        return True, item["type"]
+                        return True, item["type"], index
                 else:
                     for x in item["global"]:
                         if type(x) is not Symbol and x["name"] == name:
-                            # print("found global")
-                            return True, x["type"]
-        return False, None
+                            return True, x["type"], index
+        return False, None, None
 
     def checkType(self, type, init):
         if init == type:
@@ -106,7 +105,7 @@ class StaticChecker(BaseVisitor, Stack):
         type = ast.varType.accept(self, c)
         init = ast.varInit.accept(self, c) if ast.varInit else None
         if not self.lookupVariable(name, c)[0]:
-            return {"type": type, "name": name, "const": False}
+            return {"type": type, "name": name, "value_type": init, "const": False}
         else:
             raise Redeclared(Variable(), name)
 
@@ -120,7 +119,7 @@ class StaticChecker(BaseVisitor, Stack):
             else:
                 raise IllegalConstantExpression(ast.value)
         if not self.lookupVariable(name, c)[0]:
-            return {"type": type, "name": name, "const": True}
+            return {"type": type, "name": name, "value_type": init, "const": True}
         else:
             raise Redeclared(Constant(), name)
 
@@ -146,22 +145,31 @@ class StaticChecker(BaseVisitor, Stack):
 
     def visitClassDecl(self, ast, c):
         localVar = [c[0]]
-        name = ast.classname.accept(self, c)
-        parent = ast.parentname.accept(self, c) if ast.parentname else None
-        localVar += self.referenceClass(name, parent, c)
+        nameclass = ast.classname.accept(self, c)
+        parentclass = ast.parentname.accept(self, c) if ast.parentname else None
+        localVar += self.referenceClass(nameclass, parentclass, c)
+        attr = []
         for mem in ast.memlist:
             if self.getClass(mem) == "AttributeDecl":
-                if mem.kind.accept(self, c) == "Instance":
-                    localVar.append(mem.accept(self, localVar))
+                name = (
+                    mem.decl.variable.name
+                    if (self.getClass(mem.decl) == "VarDecl")
+                    else mem.decl.constant.name
+                )
+                if name not in attr:
+                    if mem.kind.accept(self, c) == "Instance":
+                        localVar.append(mem.accept(self, localVar))
+                    else:
+                        member = mem.accept(self, localVar)
+                        localVar[0]["global"].append(member)
+                        c[0]["global"] = localVar[0]["global"]
+                    attr.append(name)
                 else:
-                    member = mem.accept(self, localVar)
-                    # print(member)
-                    localVar[0]["global"].append(member)
-                    c[0]["global"] = localVar[0]["global"]
+                    raise Redeclared(Attribute(), name)
         for mem in ast.memlist:
             if self.getClass(mem) == "MethodDecl":
                 mem.accept(self, localVar)
-        c.append({"class": name, "local": localVar[1:]})
+        c.append({"class": nameclass, "local": localVar[1:]})
         
     def visitStatic(self, ast, c):
         return "Static"
@@ -178,8 +186,13 @@ class StaticChecker(BaseVisitor, Stack):
             if (self.getClass(ast.decl) == "VarDecl")
             else ast.decl.constant.name
         )
-        if self.lookupVariable(name, c)[0]:
-            raise Redeclared(Attribute(), name)
+        find = self.lookupVariable(name, c)
+        if find[0]:
+            # replace at index
+            if find[2] > 0:
+                c[find[2]]["type"] = find[1]
+            else:
+                raise Redeclared(Attribute(), name)
         else:
             return ast.decl.accept(self, c)
 
