@@ -2,6 +2,7 @@ import unittest
 from TestUtils import TestChecker
 from AST import *
 
+from main.bkool.utils.AST import *
 
 class CheckerSuite(unittest.TestCase):
     def test_1(self):
@@ -70,3 +71,53 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Redeclared Class: a"
         self.assertTrue(TestChecker.test(input, expect, 407))
+        
+    def test_9(self):
+        input = """
+        class ABC 
+        {
+            int x;
+            float y;
+        }
+        class XYZ extends ABC
+        {
+            int x;
+        }
+        """
+        expect = "Redeclared Attribute: x"
+        self.assertTrue(TestChecker.test(input, expect, 408))
+        
+    def test_10(self):
+        input = """
+        class ABC 
+        {
+            int[3] a = {1,2,3};
+            final int[3] b = {1,2,3e6};
+        }
+        """
+        expect = "Illegal Array Literal: [IntLit(1),IntLit(2),FloatLit(3000000.0)]"
+        self.assertTrue(TestChecker.test(input, expect, 409))
+        
+    def test_11(self):
+        input = """
+        class ABC 
+        {
+            final float[3] a = {1,2,4};
+        }
+        """
+        expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(a),ArrayType(3,FloatType),[IntLit(1),IntLit(2),IntLit(4)])"
+        self.assertTrue(TestChecker.test(input, expect, 410))
+        
+    def test_12(self):
+        input = """
+        class ABC 
+        {
+            int x;
+            int test() 
+            {
+                int x;
+            }
+        }
+        """
+        expect = "Redeclared Variable: x"
+        self.assertTrue(TestChecker.test(input, expect, 411))

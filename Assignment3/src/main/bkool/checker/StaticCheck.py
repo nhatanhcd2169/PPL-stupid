@@ -7,7 +7,6 @@ from StaticError import *
 
 # from main.bkool.utils.AST import *
 
-
 class MType:
     def __init__(self, partype, rettype):
         self.partype = partype
@@ -54,12 +53,10 @@ class StaticChecker(BaseVisitor):
             if item:
                 if index > 0:
                     if (item["name"] == name):
-                        # print("found in local")
                         return True, item["type"]
                 else:
                     for x in item:
                         if isinstance(x, dict) and x == name:
-                            # print("found in global")
                             return True, x["type"]
         return False, None
 
@@ -128,17 +125,19 @@ class StaticChecker(BaseVisitor):
         c.append({"class": name, "local": localVar[1:]})
 
     def visitStatic(self, ast, c):
-        pass
+        return "static"
 
     def visitInstance(self, ast, c):
-        pass
+        return "instance"
 
     def visitMethodDecl(self, ast, c):
-        # raise Undeclared(Method(), "Debugging")
-        raise MustInLoop(Continue())
+        # print("ENV of method", ast.name.accept(self, c), c[1:])
+        body = ast.body.accept(self, c)
+        print(body)
 
     def visitAttributeDecl(self, ast, c):
-        kind = ast.kind
+        kind = ast.kind.accept(self, c)
+        # if (kind == "instance"):
         name = ast.decl.variable.name if (ast.decl.__class__.__name__ == "VarDecl") else ast.decl.constant.name
         if self.lookupVariable(name, c)[0]:
             raise Redeclared(Attribute(), name)
@@ -189,7 +188,10 @@ class StaticChecker(BaseVisitor):
         pass
 
     def visitBlock(self, ast, c):
-        pass
+        for decl in ast.decl:
+            decl.accept(self, c)
+        for stmt in ast.stmt:
+            stmt.accept(self, c)
 
     def visitIf(self, ast, c):
         pass
@@ -198,7 +200,7 @@ class StaticChecker(BaseVisitor):
         pass
 
     def visitContinue(self, ast, c):
-        pass
+        raise MustInLoop(Continue())
 
     def visitBreak(self, ast, c):
         pass
@@ -225,10 +227,18 @@ class StaticChecker(BaseVisitor):
         return 'string'
 
     def visitNullLiteral(self, ast, c):
-        pass
+        return 'null'
 
     def visitSelfLiteral(self, ast, c):
-        pass
+        return 'self'
+
+    def checkTypeArrayLiteral(self, arr, env):
+        list = [x.accept(self, env) for x in arr]
+        res = all(map(lambda x: x == list[0], list))
+        return res, list[0]
 
     def visitArrayLiteral(self, ast, c):
-        raise IllegalArrayLiteral(ast)
+        res = self.checkTypeArrayLiteral(ast.value, c)
+        if (not res[0]):
+            raise IllegalArrayLiteral(ast)
+        return res[1]
