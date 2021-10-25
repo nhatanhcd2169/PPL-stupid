@@ -49,18 +49,18 @@ class Stack:
 class StaticChecker(BaseVisitor, Stack):
 
     global_envi = [
-        Symbol("readInt", MType([], IntType())),
-        Symbol("writeInt", MType([IntType()], VoidType())),
-        Symbol("writeIntLn", MType([IntType()], VoidType())),
-        Symbol("readFloat", MType([], FloatType())),
-        Symbol("writeFloat", MType([FloatType()], VoidType())),
-        Symbol("writeFloatLn", MType([FloatType()], VoidType())),
-        Symbol("readBool", MType([], BoolType())),
-        Symbol("writeBool", MType([BoolType()], VoidType())),
-        Symbol("writeBoolLn", MType([BoolType()], VoidType())),
-        Symbol("readStr", MType([], StringType())),
-        Symbol("writeStr", MType([StringType()], VoidType())),
-        Symbol("writeStrLn", MType([StringType()], VoidType())),
+        # Symbol("readInt", MType([], IntType())),
+        # Symbol("writeInt", MType([IntType()], VoidType())),
+        # Symbol("writeIntLn", MType([IntType()], VoidType())),
+        # Symbol("readFloat", MType([], FloatType())),
+        # Symbol("writeFloat", MType([FloatType()], VoidType())),
+        # Symbol("writeFloatLn", MType([FloatType()], VoidType())),
+        # Symbol("readBool", MType([], BoolType())),
+        # Symbol("writeBool", MType([BoolType()], VoidType())),
+        # Symbol("writeBoolLn", MType([BoolType()], VoidType())),
+        # Symbol("readStr", MType([], StringType())),
+        # Symbol("writeStr", MType([StringType()], VoidType())),
+        # Symbol("writeStrLn", MType([StringType()], VoidType())),
     ]
 
     def __init__(self, ast):
@@ -73,19 +73,23 @@ class StaticChecker(BaseVisitor, Stack):
         return self.ast.accept(self, StaticChecker.global_envi)
 
     def visitProgram(self, ast, c):
-        env = [c]
+        # print("\n\nprogram", ast)
+        env = [{"global": c}]
+        # print("env:", env)
         for x in ast.decl:
             env += [x.accept(self, env)]
 
     def lookupVariable(self, name, env):
+        # print("finding", name, "in env:", env)
         for index, item in enumerate(env):
             if item:
                 if index > 0:
                     if item["name"] == name:
                         return True, item["type"]
                 else:
-                    for x in item:
-                        if isinstance(x, dict) and x == name:
+                    for x in item["global"]:
+                        if type(x) is not Symbol and x["name"] == name:
+                            # print("found global")
                             return True, x["type"]
         return False, None
 
@@ -102,7 +106,7 @@ class StaticChecker(BaseVisitor, Stack):
         type = ast.varType.accept(self, c)
         init = ast.varInit.accept(self, c) if ast.varInit else None
         if not self.lookupVariable(name, c)[0]:
-            return {"type": type, "name": name}
+            return {"type": type, "name": name, "const": False}
         else:
             raise Redeclared(Variable(), name)
 
@@ -116,7 +120,7 @@ class StaticChecker(BaseVisitor, Stack):
             else:
                 raise IllegalConstantExpression(ast.value)
         if not self.lookupVariable(name, c)[0]:
-            return {"type": type, "name": name}
+            return {"type": type, "name": name, "const": True}
         else:
             raise Redeclared(Constant(), name)
 
@@ -147,26 +151,28 @@ class StaticChecker(BaseVisitor, Stack):
         localVar += self.referenceClass(name, parent, c)
         for mem in ast.memlist:
             if self.getClass(mem) == "AttributeDecl":
-                localVar.append(mem.accept(self, localVar))
+                if mem.kind.accept(self, c) == "Instance":
+                    localVar.append(mem.accept(self, localVar))
+                else:
+                    member = mem.accept(self, localVar)
+                    # print(member)
+                    localVar[0]["global"].append(member)
+                    c[0]["global"] = localVar[0]["global"]
         for mem in ast.memlist:
             if self.getClass(mem) == "MethodDecl":
                 mem.accept(self, localVar)
         c.append({"class": name, "local": localVar[1:]})
-
+        
     def visitStatic(self, ast, c):
-        return "static"
+        return "Static"
 
     def visitInstance(self, ast, c):
-        return "instance"
+        return "Instance"
 
     def visitMethodDecl(self, ast, c):
-        # print("ENV of method", ast.name.accept(self, c), c[1:])
         body = ast.body.accept(self, c)
-        # print(body)
 
     def visitAttributeDecl(self, ast, c):
-        kind = ast.kind.accept(self, c)
-        # if (kind == "instance"):
         name = (
             ast.decl.variable.name
             if (self.getClass(ast.decl) == "VarDecl")
@@ -175,8 +181,7 @@ class StaticChecker(BaseVisitor, Stack):
         if self.lookupVariable(name, c)[0]:
             raise Redeclared(Attribute(), name)
         else:
-            decl = ast.decl.accept(self, c)
-            return decl
+            return ast.decl.accept(self, c)
 
     def visitIntType(self, ast, c):
         return "int"
@@ -203,7 +208,6 @@ class StaticChecker(BaseVisitor, Stack):
         op = ast.op
         left = ast.left.accept(self, c)
         right = ast.right.accept(self, c)
-        print("Encountering", left, op, right)
         hybrid = ["+", "-", "*", "/", "<", "<=", ">", ">="]
         if op in hybrid:
             if left == "float" or right == "float":

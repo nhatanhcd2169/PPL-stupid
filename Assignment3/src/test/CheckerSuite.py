@@ -153,3 +153,15 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(y),FloatType,BinaryOp(+,IntLit(1),IntLit(2)))"
         self.assertTrue(TestChecker.test(input, expect, 412))
+
+    def test_14(self):
+        input = """
+        class ABC {
+            static int x = 5;
+        }
+        class XYZ {
+            float x = 7.7;
+        }
+        """
+        expect = "Redeclared Attribute: x"
+        self.assertTrue(TestChecker.test(input, expect, 413))
