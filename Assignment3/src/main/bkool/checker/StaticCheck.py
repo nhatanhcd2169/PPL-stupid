@@ -156,7 +156,7 @@ class StaticChecker(BaseVisitor, Stack):
     def visitMethodDecl(self, ast, c):
         # print("ENV of method", ast.name.accept(self, c), c[1:])
         body = ast.body.accept(self, c)
-        print(body)
+        # print(body)
 
     def visitAttributeDecl(self, ast, c):
         kind = ast.kind.accept(self, c)
@@ -215,12 +215,14 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitBlock(self, ast, c):
+        print("Enter block", ast)
+        print("\n\n")
         forStack = Stack()
         for decl in ast.decl:
             decl.accept(self, c)
         for stmt in ast.stmt:
             if self.getClass(stmt) == "For":
-                forStack.push()
+                forStack.push(stmt)
             if self.getClass(stmt) in ["Continue", "Break"]:
                 res = forStack.pop()
                 if not res:
@@ -231,7 +233,7 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitFor(self, ast, c):
-        pass
+        stmt = ast.loop.accept(self, c)
 
     def visitContinue(self, ast, c):
         pass

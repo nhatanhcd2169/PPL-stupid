@@ -110,14 +110,17 @@ class CheckerSuite(unittest.TestCase):
         
     def test_12(self):
         input = """
-        class ABC 
-        {
-            int x;
-            int test() 
-            {
-                int x;
+        class ABC {
+            int test() {
+                for i := 0 to 5 do {
+                    for j := 0 to 5 do {
+                        break;
+                    }
+                    break;
+                }
+                break;
             }
         }
         """
-        expect = "Redeclared Variable: x"
+        expect = "Break Not In Loop"
         self.assertTrue(TestChecker.test(input, expect, 411))
