@@ -4,6 +4,7 @@ from AST import *
 
 from main.bkool.utils.AST import *
 
+
 class CheckerSuite(unittest.TestCase):
     def test_1(self):
         input = "class a extends b {}"
@@ -14,7 +15,7 @@ class CheckerSuite(unittest.TestCase):
         input = "class a {} class a {}"
         expect = "Redeclared Class: a"
         self.assertTrue(TestChecker.test(input, expect, 401))
-        
+
     def test_3(self):
         input = """
         class Ex 
@@ -24,7 +25,7 @@ class CheckerSuite(unittest.TestCase):
         }"""
         expect = "Redeclared Attribute: my1Var"
         self.assertTrue(TestChecker.test(input, expect, 402))
-        
+
     def test_4(self):
         input = """
         class Ex
@@ -34,7 +35,7 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(x),IntType,FloatLit(10.0))"
         self.assertTrue(TestChecker.test(input, expect, 403))
-        
+
     def test_5(self):
         input = """
         class Ex 
@@ -47,7 +48,7 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Continue Not In Loop"
         self.assertTrue(TestChecker.test(input, expect, 404))
-        
+
     def test_6(self):
         input = """
         class Ex 
@@ -57,12 +58,30 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Illegal Constant Expression: Id(x)"
         self.assertTrue(TestChecker.test(input, expect, 405))
-        
+
     def test_7(self):
-        input = Program([ClassDecl(Id("Ex"),[AttributeDecl(Instance(),VarDecl(Id("x"),ArrayType(3,IntType()),ArrayLiteral([IntLiteral(2),FloatLiteral(1.2),NullLiteral()])))])])
+        input = Program(
+            [
+                ClassDecl(
+                    Id("Ex"),
+                    [
+                        AttributeDecl(
+                            Instance(),
+                            VarDecl(
+                                Id("x"),
+                                ArrayType(3, IntType()),
+                                ArrayLiteral(
+                                    [IntLiteral(2), FloatLiteral(1.2), NullLiteral()]
+                                ),
+                            ),
+                        )
+                    ],
+                )
+            ]
+        )
         expect = "Illegal Array Literal: [IntLit(2),FloatLit(1.2),NullLiteral()]"
         self.assertTrue(TestChecker.test(input, expect, 406))
-        
+
     def test_8(self):
         input = """
         class a {}
@@ -71,7 +90,7 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Redeclared Class: a"
         self.assertTrue(TestChecker.test(input, expect, 407))
-        
+
     def test_9(self):
         input = """
         class ABC 
@@ -86,7 +105,7 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Redeclared Attribute: x"
         self.assertTrue(TestChecker.test(input, expect, 408))
-        
+
     def test_10(self):
         input = """
         class ABC 
@@ -97,7 +116,7 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Illegal Array Literal: [IntLit(1),IntLit(2),FloatLit(3000000.0)]"
         self.assertTrue(TestChecker.test(input, expect, 409))
-        
+
     def test_11(self):
         input = """
         class ABC 
@@ -107,7 +126,7 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(a),ArrayType(3,FloatType),[IntLit(1),IntLit(2),IntLit(4)])"
         self.assertTrue(TestChecker.test(input, expect, 410))
-        
+
     def test_12(self):
         input = """
         class ABC {
@@ -124,3 +143,13 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Break Not In Loop"
         self.assertTrue(TestChecker.test(input, expect, 411))
+
+    def test_13(self):
+        input = """
+        class ABC {
+            final float x = 1 + 2.2;
+            final float y = 1 + 2;
+        }
+        """
+        expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(y),FloatType,BinaryOp(+,IntLit(1),IntLit(2)))"
+        self.assertTrue(TestChecker.test(input, expect, 412))

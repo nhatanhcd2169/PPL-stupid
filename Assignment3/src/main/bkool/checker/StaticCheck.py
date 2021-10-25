@@ -24,21 +24,27 @@ class Symbol:
 class Stack:
     def __init__(self):
         self.stack = []
+
     def isEmpty(self):
         return True if len(self.stack) == 0 else False
+
     def length(self):
         return len(self.stack)
+
     def top(self):
         return self.stack[-1]
+
     def push(self, x):
         self.x = x
         self.stack.append(x)
+
     def pop(self):
         try:
             self.stack.pop()
             return True
         except IndexError:
             return False
+
 
 class StaticChecker(BaseVisitor, Stack):
 
@@ -140,7 +146,7 @@ class StaticChecker(BaseVisitor, Stack):
         parent = ast.parentname.accept(self, c) if ast.parentname else None
         localVar += self.referenceClass(name, parent, c)
         for mem in ast.memlist:
-            if self.getClass(mem)== "AttributeDecl":
+            if self.getClass(mem) == "AttributeDecl":
                 localVar.append(mem.accept(self, localVar))
         for mem in ast.memlist:
             if self.getClass(mem) == "MethodDecl":
@@ -194,7 +200,15 @@ class StaticChecker(BaseVisitor, Stack):
         return "class"
 
     def visitBinaryOp(self, ast, c):
-        pass
+        op = ast.op
+        left = ast.left.accept(self, c)
+        right = ast.right.accept(self, c)
+        print("Encountering", left, op, right)
+        hybrid = ["+", "-", "*", "/", "<", "<=", ">", ">="]
+        if op in hybrid:
+            if left == "float" or right == "float":
+                return "float"
+            return "int"
 
     def visitUnaryOp(self, ast, c):
         pass
@@ -215,8 +229,6 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitBlock(self, ast, c):
-        print("Enter block", ast)
-        print("\n\n")
         forStack = Stack()
         for decl in ast.decl:
             decl.accept(self, c)
@@ -245,6 +257,7 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitAssign(self, ast, c):
+
         pass
 
     def visitCallStmt(self, ast, c):
