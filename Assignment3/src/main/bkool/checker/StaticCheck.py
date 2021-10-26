@@ -93,33 +93,63 @@ class StaticChecker(BaseVisitor, Stack):
         if init == type:
             return True, "Literal"
         else:
+            if isinstance(type, dict) and type["array"] == init:
+                return True, "Literal"
             if init not in ["int", "float", "string", "boolean"]:
                 return False, "Id_Or_Op"
         return False, "Literal"
 
-    def visitVarDecl(self, ast, c):
+    def varCheck(self, ast, c):
         name = ast.variable.accept(self, c)
         type = ast.varType.accept(self, c)
-        init = ast.varInit.accept(self, c) if ast.varInit else None
-        if not self.lookupVariable(name, c)[0]:
-            return {"type": type, "name": name, "value_type": init, "const": False}
-        else:
-            raise Redeclared(Variable(), name)
+        init = ast.varInit.accept(self, c) if ast.varInit else [None, True]
+        check = self.checkType(type, init[0])
+        # if not check[0]:
+        #     if check[1] == "Literal":
+        #         print("deo cung type cua literal")
+        #     else:
+        #         print("hinh nhu dung cung may type khac luon")
+        return {
+            "type": type,
+            "name": name,
+            "value_type": init[0] if init != None else type,
+            "const": False,
+        }
 
-    def visitConstDecl(self, ast, c):
+    def constCheck(self, ast, c):
         name = ast.constant.accept(self, c)
         type = ast.constType.accept(self, c)
-        init = ast.value.accept(self, c) if ast.value else None
-        print(init)
-        if not self.checkType(type, init)[0]:
-            if self.checkType(type, init)[1] == "Literal":
+        if self.getClass(ast.value) == "Id":
+            lookup = self.lookupVariable(ast.value.accept(self, c), c)
+            if (lookup[0]):
+                if not c[lookup[0]["const"]]:
+                    raise IllegalConstantExpression(ast.value)
+            else:
+                raise IllegalConstantExpression(ast.value)
+        init = ast.value.accept(self, c) if ast.value else [None, True]
+        check = self.checkType(type, init[0])
+        if not init[1]:
+            raise IllegalConstantExpression(ast.value)
+        if not check[0]:
+            if check[1] == "Literal":
                 raise TypeMismatchInConstant(ast)
             else:
                 raise IllegalConstantExpression(ast.value)
-        if not self.lookupVariable(name, c)[0]:
-            return {"type": type, "name": name, "value_type": init, "const": True}
+        return {"type": type, "name": name, "value_type": init[0], "const": True}
+
+    def visitVarDecl(self, ast, c):
+        res = self.varCheck(ast, c)
+        if not self.lookupVariable(res["name"], c)[0]:
+            return res
         else:
-            raise Redeclared(Constant(), name)
+            raise Redeclared(Variable(), res["name"])
+
+    def visitConstDecl(self, ast, c):
+        res = self.constCheck(ast, c)
+        if not self.lookupVariable(res["name"], c)[0]:
+            return res
+        else:
+            raise Redeclared(Constant(), res["name"])
 
     def lookupClass(self, name, env):
         if len(env) > 1:
@@ -179,6 +209,7 @@ class StaticChecker(BaseVisitor, Stack):
         body = ast.body.accept(self, c)
 
     def visitAttributeDecl(self, ast, c):
+        # print("Investigating", ast)
         name = (
             ast.decl.variable.name
             if (self.getClass(ast.decl) == "VarDecl")
@@ -187,7 +218,11 @@ class StaticChecker(BaseVisitor, Stack):
         find = self.lookupVariable(name, c)
         if find[0]:
             if find[2] > 0:
-                c[find[2]]["type"] = find[1]
+                if self.getClass(ast.decl) == "ConstDecl":
+                    res = self.constCheck(ast.decl, c)
+                else:
+                    res = self.varCheck(ast.decl, c)
+                c[find[2]] = res
             else:
                 raise Redeclared(Attribute(), name)
         else:
@@ -209,20 +244,33 @@ class StaticChecker(BaseVisitor, Stack):
         return "void"
 
     def visitArrayType(self, ast, c):
-        return "array"
+        return {"array": ast.eleType.accept(self, c)}
 
     def visitClassType(self, ast, c):
-        return "class"
+        return {"class": ast.classname.name}
 
     def visitBinaryOp(self, ast, c):
+        primitive = [
+            "IntLiteral",
+            "FloatLiteral",
+            "BoolLiteral",
+            "StringLiteral",
+            "ArrayLiteral",
+        ]
+        ops = ["BinaryOp", "UnaryOp"]
+        hybrid = ["+", "-", "*", "/", "<", "<=", ">", ">="]
         op = ast.op
+        isStatic = True
+        left = self.getClass(ast.left)
+        right = self.getClass(ast.right)
+        if left not in primitive + ops or right not in primitive + ops:
+            isStatic = False
         left = ast.left.accept(self, c)
         right = ast.right.accept(self, c)
-        hybrid = ["+", "-", "*", "/", "<", "<=", ">", ">="]
         if op in hybrid:
-            if left == "float" or right == "float":
-                return "float"
-            return "int"
+            if left[0] == "float" or right[0] == "float":
+                return ["float", isStatic]
+            return ["int", isStatic]
 
     def visitUnaryOp(self, ast, c):
         pass
@@ -278,22 +326,22 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitIntLiteral(self, ast, c):
-        return "int"
+        return ["int", True]
 
     def visitFloatLiteral(self, ast, c):
-        return "float"
+        return ["float", True]
 
     def visitBooleanLiteral(self, ast, c):
-        return "bool"
+        return ["bool", True]
 
     def visitStringLiteral(self, ast, c):
-        return "string"
+        return ["string", True]
 
     def visitNullLiteral(self, ast, c):
-        return "null"
+        return ["null", True]
 
     def visitSelfLiteral(self, ast, c):
-        return "self"
+        return ["self", True]
 
     def checkTypeArrayLiteral(self, arr, env):
         list = [x.accept(self, env) for x in arr]

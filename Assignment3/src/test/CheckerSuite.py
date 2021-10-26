@@ -169,22 +169,57 @@ class CheckerSuite(unittest.TestCase):
     #     expect = "Redeclared Attribute: x"
     #     self.assertTrue(TestChecker.test(input, expect, 413))
 
-    def test_15(self):
-        input = """
-        class X 
-        {
-            final int x;
-        }
-        """
-        expect = "Illegal Constant Expression: None"
-        self.assertTrue(TestChecker.test(input, expect, 414))
-        
-    def test_16(self):
-        input = """
-        class X 
-        {
-            final int x;
-        }
-        """
-        expect = "Illegal Constant Expression: None"
-        self.assertTrue(TestChecker.test(input, expect, 414))
+    # def test_15(self):
+    #     input = """
+    #     class X
+    #     {
+    #         float x = 5 + 2 + 4.4 + 6 + 7;
+    #         final int y = 1 + a;
+    #     }
+    #     """
+    #     expect = "Illegal Constant Expression: BinaryOp(+,IntLit(1),Id(a))"
+    #     self.assertTrue(TestChecker.test(input, expect, 414))
+
+    # def test_16(self):
+    #     input = """
+    #     class X
+    #     {
+    #         final int x;
+    #     }
+    #     """
+    #     expect = "Illegal Constant Expression: None"
+    #     self.assertTrue(TestChecker.test(input, expect, 415))
+
+    # def test_17(self):
+    #     input = """
+    #     class X
+    #     {
+    #         int[5] x = {1,2,3,4,5};
+    #         float x = 7.7;
+    #     }
+    #     """
+    #     expect = "Redeclared Attribute: x"
+    #     self.assertTrue(TestChecker.test(input, expect, 416))
+    """IN PROGRESS"""
+    """IN PROGRESS"""
+    """IN PROGRESS"""
+    """IN PROGRESS"""
+    def test_18(self):
+        input = Program(
+            [
+                ClassDecl(
+                    Id("Ex"),
+                    [
+                        AttributeDecl(Static(), VarDecl(Id("a"), IntType())),
+                        AttributeDecl(
+                            Instance(),
+                            ConstDecl(
+                                Id("x"), IntType(), FieldAccess(Id("Ex"), Id("a"))
+                            ),
+                        ),
+                    ],
+                )
+            ]
+        )
+        expect = "Redeclared Attribute: x"
+        self.assertTrue(TestChecker.test(input, expect, 417))
