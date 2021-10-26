@@ -204,22 +204,24 @@ class CheckerSuite(unittest.TestCase):
     """IN PROGRESS"""
     """IN PROGRESS"""
     """IN PROGRESS"""
-    def test_18(self):
-        input = Program(
-            [
-                ClassDecl(
-                    Id("Ex"),
-                    [
-                        AttributeDecl(Static(), VarDecl(Id("a"), IntType())),
-                        AttributeDecl(
-                            Instance(),
-                            ConstDecl(
-                                Id("x"), IntType(), FieldAccess(Id("Ex"), Id("a"))
-                            ),
-                        ),
-                    ],
-                )
-            ]
-        )
-        expect = "Redeclared Attribute: x"
-        self.assertTrue(TestChecker.test(input, expect, 417))
+    # def test_18(self):
+    #     input = Program(
+    #         [
+    #             ClassDecl(Id("Mini"), []),
+    #             ClassDecl(
+    #                 Id("Ex"),
+    #                 [
+    #                     AttributeDecl(Static(), VarDecl(Id("a"), IntType())),
+    #                     AttributeDecl(
+    #                         Instance(),
+    #                         ConstDecl(
+    #                             Id("x"), IntType(), FieldAccess(Id("Ex"), Id("a"))
+    #                         ),
+    #                     ),
+    #                 ],
+    #                 Id("Mini")
+    #             )
+    #         ]
+    #     )
+    #     expect = "Illegal Constant Expression: FieldAccess(Id(Ex),Id(a))"
+    #     self.assertTrue(TestChecker.test(input, expect, 417))
