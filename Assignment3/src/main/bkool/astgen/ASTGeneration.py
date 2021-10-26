@@ -74,8 +74,8 @@ class ASTGeneration(BKOOLVisitor):
         return Id(ctx.ID().getText())
     
     def visitImmutableInitialize(self, ctx: BKOOLParser.ImmutableInitializeContext):
-        # immutableInitialize: (EQUAL_SIGN exp);
-        return ctx.exp().accept(self)
+        # immutableInitialize: (EQUAL_SIGN exp)?;
+        return ctx.exp().accept(self) if ctx.exp() else None
     
     def visitAttributeType(self, ctx: BKOOLParser.AttributeTypeContext):
         # attributeType: compositeType | scalarType;

@@ -29,7 +29,7 @@ immutableAttrDecl: (FINAL | FINAL STATIC | STATIC FINAL) attributeType (ID immut
 mutableAttrDecl: (STATIC)? attributeType (ID mutableInitialize) (COMMA (ID mutableInitialize))* S_COLON;
 mutableObjAttrDecl:  (STATIC)? ID (LSB INTEGER_LITERAL RSB)? (ID mutableObjInitialize) (COMMA (ID mutableObjInitialize))* S_COLON;
 
-immutableInitialize: (EQUAL_SIGN exp);
+immutableInitialize: (EQUAL_SIGN exp)?;
 mutableInitialize: (EQUAL_SIGN exp)?;
 // mutableObjInitialize: (EQUAL_SIGN exp10)?;
 mutableObjInitialize: (EQUAL_SIGN objInit)?;

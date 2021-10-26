@@ -18,7 +18,7 @@ class CheckerSuite(unittest.TestCase):
 
     # def test_3(self):
     #     input = """
-    #     class Ex 
+    #     class Ex
     #     {
     #         int my1Var;
     #         static float my1Var;
@@ -38,9 +38,9 @@ class CheckerSuite(unittest.TestCase):
 
     # def test_5(self):
     #     input = """
-    #     class Ex 
+    #     class Ex
     #     {
-    #         void foo() 
+    #         void foo()
     #         {
     #             continue;
     #         }
@@ -51,7 +51,7 @@ class CheckerSuite(unittest.TestCase):
 
     # def test_6(self):
     #     input = """
-    #     class Ex 
+    #     class Ex
     #     {
     #         final int x = x;
     #     }
@@ -93,7 +93,7 @@ class CheckerSuite(unittest.TestCase):
 
     # def test_9(self):
     #     input = """
-    #     class ABC 
+    #     class ABC
     #     {
     #         int x;
     #         float y;
@@ -109,20 +109,20 @@ class CheckerSuite(unittest.TestCase):
     #     expect = "Redeclared Attribute: z"
     #     self.assertTrue(TestChecker.test(input, expect, 408))
 
-    def test_10(self):
-        input = """
-        class ABC 
-        {
-            int[3] a = {1,2,3};
-            final int[3] b = {1,2,3e6};
-        }
-        """
-        expect = "Illegal Array Literal: [IntLit(1),IntLit(2),FloatLit(3000000.0)]"
-        self.assertTrue(TestChecker.test(input, expect, 409))
+    # def test_10(self):
+    #     input = """
+    #     class ABC
+    #     {
+    #         int[3] a = {1,2,3};
+    #         final int[3] b = {1,2,3e6};
+    #     }
+    #     """
+    #     expect = "Illegal Array Literal: [IntLit(1),IntLit(2),FloatLit(3000000.0)]"
+    #     self.assertTrue(TestChecker.test(input, expect, 409))
 
     # def test_11(self):
     #     input = """
-    #     class ABC 
+    #     class ABC
     #     {
     #         final float[3] a = {1,2,4};
     #     }
@@ -168,3 +168,23 @@ class CheckerSuite(unittest.TestCase):
     #     """
     #     expect = "Redeclared Attribute: x"
     #     self.assertTrue(TestChecker.test(input, expect, 413))
+
+    def test_15(self):
+        input = """
+        class X 
+        {
+            final int x;
+        }
+        """
+        expect = "Illegal Constant Expression: None"
+        self.assertTrue(TestChecker.test(input, expect, 414))
+        
+    def test_16(self):
+        input = """
+        class X 
+        {
+            final int x;
+        }
+        """
+        expect = "Illegal Constant Expression: None"
+        self.assertTrue(TestChecker.test(input, expect, 414))

@@ -5,7 +5,7 @@ from AST import *
 from Visitor import *
 from StaticError import *
 
-from main.bkool.utils.AST import *
+# from main.bkool.utils.AST import *
 
 
 class MType:
@@ -73,14 +73,11 @@ class StaticChecker(BaseVisitor, Stack):
         return self.ast.accept(self, StaticChecker.global_envi)
 
     def visitProgram(self, ast, c):
-        # print("\n\nprogram", ast)
         env = [{"global": c}]
-        # print("env:", env)
         for x in ast.decl:
             env += [x.accept(self, env)]
 
     def lookupVariable(self, name, env):
-        # print("finding", name, "in env:", env)
         for index, item in enumerate(env):
             if item:
                 if index > 0:
@@ -112,7 +109,8 @@ class StaticChecker(BaseVisitor, Stack):
     def visitConstDecl(self, ast, c):
         name = ast.constant.accept(self, c)
         type = ast.constType.accept(self, c)
-        init = ast.value.accept(self, c)
+        init = ast.value.accept(self, c) if ast.value else None
+        print(init)
         if not self.checkType(type, init)[0]:
             if self.checkType(type, init)[1] == "Literal":
                 raise TypeMismatchInConstant(ast)
@@ -170,7 +168,7 @@ class StaticChecker(BaseVisitor, Stack):
             if self.getClass(mem) == "MethodDecl":
                 mem.accept(self, localVar)
         c.append({"class": nameclass, "local": localVar[1:]})
-        
+
     def visitStatic(self, ast, c):
         return "Static"
 
@@ -188,7 +186,6 @@ class StaticChecker(BaseVisitor, Stack):
         )
         find = self.lookupVariable(name, c)
         if find[0]:
-            # replace at index
             if find[2] > 0:
                 c[find[2]]["type"] = find[1]
             else:
