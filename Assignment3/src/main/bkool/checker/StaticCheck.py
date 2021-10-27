@@ -46,26 +46,7 @@ class Stack:
             return False
 
 
-class StaticChecker(BaseVisitor, Stack):
-
-    global_envi = [
-        # Symbol("readInt", MType([], IntType())),
-        # Symbol("writeInt", MType([IntType()], VoidType())),
-        # Symbol("writeIntLn", MType([IntType()], VoidType())),
-        # Symbol("readFloat", MType([], FloatType())),
-        # Symbol("writeFloat", MType([FloatType()], VoidType())),
-        # Symbol("writeFloatLn", MType([FloatType()], VoidType())),
-        # Symbol("readBool", MType([], BoolType())),
-        # Symbol("writeBool", MType([BoolType()], VoidType())),
-        # Symbol("writeBoolLn", MType([BoolType()], VoidType())),
-        # Symbol("readStr", MType([], StringType())),
-        # Symbol("writeStr", MType([StringType()], VoidType())),
-        # Symbol("writeStrLn", MType([StringType()], VoidType())),
-    ]
-
-    def __init__(self, ast):
-        self.ast = ast
-
+class Helper:
     """HELPERS"""
 
     def getClass(self, obj):
@@ -176,10 +157,34 @@ class StaticChecker(BaseVisitor, Stack):
                 return env[lookupParent[1]]["local"]
         return []
 
+
+class StaticChecker(BaseVisitor, Stack):
+
+    global_envi = [
+        # Symbol("readInt", MType([], IntType())),
+        # Symbol("writeInt", MType([IntType()], VoidType())),
+        # Symbol("writeIntLn", MType([IntType()], VoidType())),
+        # Symbol("readFloat", MType([], FloatType())),
+        # Symbol("writeFloat", MType([FloatType()], VoidType())),
+        # Symbol("writeFloatLn", MType([FloatType()], VoidType())),
+        # Symbol("readBool", MType([], BoolType())),
+        # Symbol("writeBool", MType([BoolType()], VoidType())),
+        # Symbol("writeBoolLn", MType([BoolType()], VoidType())),
+        # Symbol("readStr", MType([], StringType())),
+        # Symbol("writeStr", MType([StringType()], VoidType())),
+        # Symbol("writeStrLn", MType([StringType()], VoidType())),
+    ]
+
+    def __init__(self, ast):
+        self.ast = ast
+
     """ENTRY"""
 
     def check(self):
         return self.ast.accept(self, StaticChecker.global_envi)
+
+    def getClass(self, obj):
+        return obj.__class__.__name__
 
     def visitProgram(self, ast, c):
         env = [{"class": "io", "statics": {"attrs": [], "methods": c}}]
@@ -187,15 +192,30 @@ class StaticChecker(BaseVisitor, Stack):
             env += [x.accept(self, env)]
 
     def visitVarDecl(self, ast, c):
-        pass
+        return {"name": "", "const": False}
 
     def visitConstDecl(self, ast, c):
-        pass
+        name = ast.constant.accept(self, c)
+        type = ast.constType.accept(self, c)
+        init = ast.value.accept(self, c) if ast.value else [None, True]
+        check = self.checkType(type, init[0])
+        if not init[1]:
+            raise IllegalConstantExpression(ast.value)
+        if not check[0]:
+            if check[1] == "Literal":
+                raise TypeMismatchInConstant(ast)
+            else:
+                raise IllegalConstantExpression(ast.value)
+        return {"type": type, "name": name, "value_type": init[0], "const": True}
 
     def visitClassDecl(self, ast, c):
         classname = ast.classname.accept(self, c)
-        parentname = ast.parentname.accept(self, c) if ast.parentname else None
-        local = {"class": classname, "statics": {"attrs": [], "methods": []}, "locals": {"attrs": [], "methods": []}}
+        parentname = ast.parentname.accept(self, c) if ast.parentname else ""
+        local = {
+            "class": classname,
+            "statics": {"attrs": [], "methods": []},
+            "locals": {"attrs": [], "methods": []},
+        }
         attr = []
         for mem in ast.memlist:
             if self.getClass(mem) == "AttributeDecl":
@@ -206,10 +226,20 @@ class StaticChecker(BaseVisitor, Stack):
                 )
                 if name not in attr:
                     if mem.kind.accept(self, local) == "Instance":
-                        member = mem.accept(self, c + [local] + [{"current": classname}])
+                        member = mem.accept(
+                            self,
+                            c
+                            + [local]
+                            + [{"current": classname, "inherit": parentname}],
+                        )
                         local["locals"]["attrs"].append(member)
                     else:
-                        member = mem.accept(self, c + [local] + [{"current": classname}])
+                        member = mem.accept(
+                            self,
+                            c
+                            + [local]
+                            + [{"current": classname, "inherit": parentname}],
+                        )
                         local["statics"]["attrs"].append(member)
                 else:
                     raise Redeclared(Attribute(), name)
@@ -233,8 +263,11 @@ class StaticChecker(BaseVisitor, Stack):
             if (self.getClass(ast.decl) == "VarDecl")
             else ast.decl.constant.name
         )
-        
-        return name
+        local = []
+        for x in c[:-1]:
+            if x["class"] == current:
+                local = x
+        return ast.decl.accept(self, c)
 
     def visitIntType(self, ast, c):
         return "int"
