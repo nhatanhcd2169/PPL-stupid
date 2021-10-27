@@ -5,7 +5,7 @@ from AST import *
 from Visitor import *
 from StaticError import *
 
-from main.bkool.utils.AST import *
+# from main.bkool.utils.AST import *
 
 
 class MType:
@@ -236,26 +236,44 @@ class StaticChecker(BaseVisitor, Stack):
     #                         return [True, "method", methods_item]
     #     return [False, None, None]
 
-    def lookupVariable(self, name, env, child, parent):
-        stack = parent
+    def lookupVariable(self, name, env, child, parent=None):
         for class_i, class_item in enumerate(env[:-1]):
             if class_item["class"] == child:
                 for statics_i, statics_item in enumerate(
                     class_item["statics"]["attrs"]
                 ):
                     if statics_item["name"] == name:
-                        return [True, statics_item, "static"]
+                        return [True, statics_item, "static", class_item["class"]]
                 for locals_i, locals_item in enumerate(class_item["locals"]["attrs"]):
                     if locals_item["name"] == name:
-                        return [True, locals_item, "local"]
-        while len(stack) > 0:
-            for class_i, class_item in enumerate(env[:-1]):
-                if class_item["class"] == stack[-1]:
-                    for locals_i, locals_item in enumerate(
-                        class_item["locals"]["attrs"]
-                    ):
-                        if locals_item["name"] == name:
-                            return [True, locals_item, "local"]
+                        return [True, locals_item, "local", class_item["class"]]
+        if parent != None:
+            stack = parent
+            while len(stack) > 0:
+                for class_i, class_item in enumerate(env[:-1]):
+                    if class_item["class"] == stack[-1]:
+                        for statics_i, statics_item in enumerate(
+                            class_item["statics"]["attrs"]
+                        ):
+                            if statics_item["name"] == name:
+                                return [
+                                    True,
+                                    statics_item,
+                                    "static",
+                                    class_item["class"],
+                                    "inherited",
+                                ]
+                        for locals_i, locals_item in enumerate(
+                            class_item["locals"]["attrs"]
+                        ):
+                            if locals_item["name"] == name:
+                                return [
+                                    True,
+                                    locals_item,
+                                    "local",
+                                    class_item["class"],
+                                    "inherited",
+                                ]
                 stack.pop()
         return [False, None, None]
 
@@ -273,7 +291,28 @@ class StaticChecker(BaseVisitor, Stack):
     def visitConstDecl(self, ast, c):
         name = ast.constant.accept(self, c)
         type = ast.constType.accept(self, c)
+        if self.getClass(ast.value) == "Id":
+            lookup = self.lookupVariable(
+                ast.value.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+            )
+            if lookup[0]:
+                if not lookup[1]["const"]:
+                    raise IllegalConstantExpression(ast.value)
+            else:
+                # raise Undeclared(Identifier(), ast.value.accept(self, c)) # idk why?
+                raise IllegalConstantExpression(ast.value)
         init = ast.value.accept(self, c) if ast.value else [None, True]
+        if init[0] == None or (len(init) == 3 and init[2] == None):
+            raise IllegalConstantExpression(ast.value)
+        else:
+            if init[0] in ["int", "bool", "float", "string"]:
+                if not init[1]:
+                    raise IllegalConstantExpression(ast.value)
+                else:
+                    if init[0] != type:
+                        raise TypeMismatchInConstant(ast)
+            else:
+                raise TypeMismatchInConstant(ast)
         return {"type": type, "name": name, "value_type": init[0], "const": True}
 
     def visitClassDecl(self, ast, c):
@@ -313,7 +352,6 @@ class StaticChecker(BaseVisitor, Stack):
                             }
                         ]
                     )
-                    print(f"obj: {obj}")
                     if mem.kind.accept(self, local) == "Instance":
                         member = mem.accept(self, obj)
                         local["locals"]["attrs"].append(member)
@@ -336,7 +374,6 @@ class StaticChecker(BaseVisitor, Stack):
                             }
                         ]
                     )
-                    print(f"obj: {obj}")
                     if mem.kind.accept(self, local) == "Instance":
                         member = mem.accept(self, obj)
                         local["locals"]["methods"].append(member)
@@ -357,11 +394,6 @@ class StaticChecker(BaseVisitor, Stack):
         return "Instance"
 
     def visitMethodDecl(self, ast, c):
-        # kind: SIKind
-        # name: Id
-        # param: List[VarDecl]
-        # returnType: Type  # None for constructor
-        # body: Block
         params = []
         if len(ast.param) > 0:
             for param in ast.param:
@@ -372,7 +404,7 @@ class StaticChecker(BaseVisitor, Stack):
                 else:
                     raise Redeclared(Parameter(), name)
                 params.append(member)
-        print(params)
+        ast.body.accept(self, c)
 
     def visitAttributeDecl(self, ast, c):
         current = c[-1]["current"]
@@ -406,8 +438,6 @@ class StaticChecker(BaseVisitor, Stack):
         return {"class": ast.classname.name}
 
     def visitBinaryOp(self, ast, c):
-        print(f"evaluating {ast}")
-        """Evaluate staticality"""
         primitive = [
             "IntLiteral",
             "FloatLiteral",
@@ -439,6 +469,7 @@ class StaticChecker(BaseVisitor, Stack):
                 res = self.lookupVariable(
                     ast.right.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
                 )
+                checkId["right"] = res
                 if res[0]:
                     if not res[1]["const"]:
                         isStatic = False
@@ -446,30 +477,54 @@ class StaticChecker(BaseVisitor, Stack):
                     raise Undeclared(Identifier(), ast.right.accept(self, c))
             if left != "Id" and right != "Id":
                 isStatic = False
-        """Evaluate type"""
-        print(checkId)
-        left = ast.left.accept(self, c)
-        right = ast.right.accept(self, c)
-        if op in ["&&", "||"] and left in ["bool"] and right in ["bool"]:
+        left = (
+            ast.left.accept(self, c)
+            if checkId["left"] == ""
+            else [
+                checkId["left"][1]["type"]
+                if not isinstance(checkId["left"][1]["type"], dict)
+                else checkId["left"][1]["type"]["class"]
+                if "class" in checkId["left"][1]["type"]
+                else checkId["left"][1]["type"]["array"],
+                checkId["left"][1]["const"],
+            ]
+        )
+        right = (
+            ast.right.accept(self, c)
+            if checkId["right"] == ""
+            else [
+                checkId["right"][1]["type"]
+                if not isinstance(checkId["right"][1]["type"], dict)
+                else checkId["right"][1]["type"]["class"]
+                if "class" in checkId["right"][1]["type"]
+                else checkId["right"][1]["type"]["array"],
+                checkId["right"][1]["const"],
+            ]
+        )
+        if op in ["&&", "||"] and left[0] in ["bool"] and right[0] in ["bool"]:
             return ["bool", isStatic]
         elif (
-            op in ["==", "!="] and left in ["bool", "int"] and right in ["bool", "int"]
+            op in ["==", "!="]
+            and left[0] in ["bool", "int"]
+            and right[0] in ["bool", "int"]
         ):
             return ["bool", isStatic]
         elif (
             op in ["+", "-", "*", "<", "<=", ">", ">="]
-            and left in ["float", "int"]
-            and right in ["float", "int"]
+            and left[0] in ["float", "int"]
+            and right[0] in ["float", "int"]
         ):
-            if left == "int" and right == "int":
+            if left[0] == "int" and right[0] == "int":
                 return ["int", isStatic]
             else:
                 return ["float", isStatic]
-        elif op in ["/"] and left in ["float", "int"] and right in ["float", "int"]:
+        elif (
+            op in ["/"] and left[0] in ["float", "int"] and right[0] in ["float", "int"]
+        ):
             return ["float", isStatic]
-        elif op in ["\\", "%"] and left == "int" and right == "int":
+        elif op in ["\\", "%"] and left[0] == "int" and right[0] == "int":
             return ["int", isStatic]
-        elif op in ["^"] and left == "string" and right == "string":
+        elif op in ["^"] and left[0] == "string" and right[0] == "string":
             return ["string", isStatic]
         else:
             raise TypeMismatchInExpression(ast)
@@ -490,10 +545,45 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitFieldAccess(self, ast, c):
-        pass
+        # obj:Expr
+        # fieldname:Id
+        findField = self.lookupVariable(
+            ast.fieldname.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+        )
+        if findField[2] == "static":
+            if self.getClass(ast.obj) == "Id":
+                classname = ast.obj.accept(self, c)
+                if classname == findField[3]:
+                    return [findField[1]["type"], True, findField[1]["value_type"]]
+                else:
+                    raise Undeclared(Class(), classname)
+            else:
+                raise IllegalMemberAccess(ast)
+        # else:
+        #     findObj = self.lookupVariable(
+        #         ast.obj.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+        #     )
+        #     if self.getClass(ast.obj) == "Id":
+        #         # x.o
+        #         objname = ast.obj.accept(self, c)
+        #         if not ("class" in findObj[1]["type"]):
+        #             raise TypeMismatchInExpression(ast)
+        #         else:
+        #             if findObj[3] == c[-1]["current"]: # same level
+        #                 raise
 
     def visitBlock(self, ast, c):
-        pass
+        forStack = Stack()
+        for decl in ast.decl:
+            decl.accept(self, c)
+        for stmt in ast.stmt:
+            if self.getClass(stmt) == "For":
+                forStack.push(stmt)
+            if self.getClass(stmt) in ["Continue", "Break"]:
+                res = forStack.pop()
+                if not res:
+                    raise MustInLoop(stmt)
+            stmt.accept(self, c)
 
     def visitIf(self, ast, c):
         pass
@@ -502,10 +592,10 @@ class StaticChecker(BaseVisitor, Stack):
         stmt = ast.loop.accept(self, c)
 
     def visitContinue(self, ast, c):
-        pass
+        return
 
     def visitBreak(self, ast, c):
-        pass
+        return
 
     def visitReturn(self, ast, c):
         pass
@@ -539,4 +629,4 @@ class StaticChecker(BaseVisitor, Stack):
         res = all(map(lambda x: x[0] == list[0][0] and x[1] == True, list))
         if not res:
             raise IllegalArrayLiteral(ast)
-        return list[0][0]
+        return [list[0][0], False]
