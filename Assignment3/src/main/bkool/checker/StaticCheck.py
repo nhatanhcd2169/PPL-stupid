@@ -45,119 +45,6 @@ class Stack:
         except IndexError:
             return False
 
-
-class Helper:
-    """HELPERS"""
-
-    def getClass(self, obj):
-        return obj.__class__.__name__
-
-    """LOOKUPS"""
-
-    def lookupObject(self, name, env):
-        for index, item in enumerate(env):
-            if item:
-                if index > 0:
-                    if item["name"] == name:
-                        return True, item["type"], index
-                else:
-                    for x in item["global"]:
-                        if type(x) is not Symbol and x["name"] == name:
-                            return True, x["type"], index
-        return False, None, None
-
-    def lookupVariable(self, name, env):
-        for index, item in enumerate(env):
-            if item:
-                if index > 0:
-                    if item["name"] == name:
-                        return True, item["type"], index
-                else:
-                    for g_index, x in enumerate(item["global"]):
-                        if type(x) is not Symbol and x["name"] == name:
-                            return True, x["type"], index, g_index
-        return False, None, None
-
-    def lookupClass(self, name, env):
-        if len(env) > 1:
-            for index, item in enumerate(env):
-                if index > 0 and item:
-                    # print(item)
-                    if item["class"] == name:
-                        return True, index
-        return False, None
-
-    """CHECKERS"""
-
-    def checkType(self, type, init):
-        if init == type:
-            return True, "Literal"
-        else:
-            if isinstance(type, dict):
-                if "array" in type and type["array"] == init:
-                    return True, "Literal"
-                if "class" in type and type["class"] == init:
-                    return False, "Id_Or_Op"
-            if init not in ["int", "float", "string", "boolean"]:
-                return False, "Id_Or_Op"
-        return False, "Literal"
-
-    def varCheck(self, ast, c):
-        name = ast.variable.accept(self, c)
-        type = ast.varType.accept(self, c)
-        init = ast.varInit.accept(self, c) if ast.varInit else [None, True]
-        check = self.checkType(type, init[0])
-        # if not check[0]:
-        #     if check[1] == "Literal":
-        #         print("deo cung type cua literal")
-        #     else:
-        #         print("hinh nhu dung cung may type khac luon")
-        return {
-            "type": type,
-            "name": name,
-            "value_type": init[0] if init != None else type,
-            "const": False,
-        }
-
-    def constCheck(self, ast, c):
-        name = ast.constant.accept(self, c)
-        type = ast.constType.accept(self, c)
-        if self.getClass(ast.value) == "Id":
-            lookup = self.lookupVariable(ast.value.accept(self, c), c)
-            if lookup[0]:
-                if not c[lookup[0]["const"]]:
-                    raise IllegalConstantExpression(ast.value)
-            else:
-                raise IllegalConstantExpression(ast.value)
-        init = ast.value.accept(self, c) if ast.value else [None, True]
-        check = self.checkType(type, init[0])
-        if not init[1]:
-            raise IllegalConstantExpression(ast.value)
-        if not check[0]:
-            if check[1] == "Literal":
-                raise TypeMismatchInConstant(ast)
-            else:
-                raise IllegalConstantExpression(ast.value)
-        return {"type": type, "name": name, "value_type": init[0], "const": True}
-
-    def checkTypeArrayLiteral(self, arr, env):
-        list = [x.accept(self, env) for x in arr]
-        res = all(map(lambda x: x == list[0], list))
-        return res, list[0]
-
-    def referenceClass(self, classname, parentname, env):
-        lookupName = self.lookupClass(classname, env)
-        lookupParent = self.lookupClass(parentname, env)
-        if lookupName[0]:
-            raise Redeclared(Class(), classname)
-        if parentname != None:
-            if not lookupParent[0]:
-                raise Undeclared(Class(), parentname)
-            else:
-                return env[lookupParent[1]]["local"]
-        return []
-
-
 class StaticChecker(BaseVisitor, Stack):
 
     global_envi = [
@@ -183,13 +70,6 @@ class StaticChecker(BaseVisitor, Stack):
     def check(self):
         return self.ast.accept(self, StaticChecker.global_envi)
 
-    """UTILS"""
-    """UTILS"""
-    """UTILS"""
-    """UTILS"""
-    """UTILS"""
-    """UTILS"""
-
     def getClass(self, obj):
         return obj.__class__.__name__
 
@@ -198,43 +78,29 @@ class StaticChecker(BaseVisitor, Stack):
             if item["class"] == name:
                 return [True, item, index]
         return [False, None, None]
-
-    # def lookup(self, name, env):
-    #     """
-    #     Class
-    #     {
-    #         "class": classname,
-    #         "statics": {"attrs": [], "methods": []},
-    #         "locals": {"attrs": [], "methods": []},
-    #     }
-    #     Attribute
-    #     {
-    #         "type": type,
-    #         "name": name,
-    #         "value_type": value_type,
-    #         "const": True
-    #     }
-    #     Methods
-    #     {
-    #         "return_type": type,
-    #         "name": name,
-    #         "param": [VarDecl],
-    #         "body": List[VarDecl + Statement]
-    #     }
-    #     """
-
-    #     for (class_i, class_item) in enumerate(env):
-    #         if class_item["class"] == name:
-    #             return [True, "class", class_item]
-    #         else:
-    #             for (statics_i, statics_item) in enumerate(class_item["statics"]):
-    #                 for (attrs_i, attrs_item) in enumerate(statics_item["attrs"]):
-    #                     if attrs_item["name"] == name:
-    #                         return [True, "attr", attrs_item]
-    #                 for (methods_i, methods_item) in enumerate(statics_item["methods"]):
-    #                     if methods_item["name"] == name:
-    #                         return [True, "method", methods_item]
-    #     return [False, None, None]
+        """
+        Class
+        {
+            "class": classname,
+            "statics": {"attrs": [], "methods": []},
+            "locals": {"attrs": [], "methods": []},
+            inherit: []
+        }
+        Attribute
+        {
+            "type": type,
+            "name": name,
+            "value_type": value_type,
+            "const": True
+        }
+        Methods
+        {
+            "return_type": type,
+            "name": name,
+            "param": [VarDecl],
+            "body": List[VarDecl + Statement]
+        }
+        """
 
     def lookupVariable(self, name, env, child, parent=None):
         for class_i, class_item in enumerate(env[:-1]):
