@@ -204,10 +204,12 @@ class CheckerSuite(unittest.TestCase):
     """IN PROGRESS"""
     """IN PROGRESS"""
     """IN PROGRESS"""
+    # ClassDecl(Id("Mini"), []),
+    # Id("Mini")
+    
     # def test_18(self):
     #     input = Program(
     #         [
-    #             ClassDecl(Id("Mini"), []),
     #             ClassDecl(
     #                 Id("Ex"),
     #                 [
@@ -219,7 +221,6 @@ class CheckerSuite(unittest.TestCase):
     #                         ),
     #                     ),
     #                 ],
-    #                 Id("Mini")
     #             )
     #         ]
     #     )
@@ -243,13 +244,45 @@ class CheckerSuite(unittest.TestCase):
     #     expect = "Illegal Constant Expression: FieldAccess(Id(Ex),Id(a))"
     #     self.assertTrue(TestChecker.test(input, expect, 418))
     
-    def test_20(self):
-        input = """
-        class ABC {
-            void count(int a, int b, A a) {}
-        }
-        """
-        expect = "Redeclared Parameter: a"
-        self.assertTrue(TestChecker.test(input, expect, 419))
+    # def test_20(self):
+    #     input = """
+    #     class ABC {
+    #         void count(int a, int b, A a) {}
+    #     }
+    #     """
+    #     expect = "Redeclared Parameter: a"
+    #     self.assertTrue(TestChecker.test(input, expect, 419))
+    
+    # def test_21(self):
+    #     input = """
+    #     class A {
+    #         int x = 5;
+    #         int e = 6;
+    #     }
+    #     class B extends A {
+    #         int x = 6;
+    #         int y = 7;
+    #     }
+    #     class C extends B {
+    #         int z = 8;
+    #         final float u = 10 + e; 
+    #     }
+    #     """
+    #     expect = "Undeclared Identifier: e"
+    #     self.assertTrue(TestChecker.test(input, expect, 420))   
+        
+    # def test_22(self):
+    #     input = """
+    #     class ABC {
+    #         int x = 5;
+    #         final int y = 7;
+    #         final static int z = 9;
+    #     }
+    #     class XYZ extends ABC {
+    #         int x = 6 + y;
+    #     }
+    #     """
+    #     expect = "Redeclared Parameter: a"
+    #     self.assertTrue(TestChecker.test(input, expect, 421))
     
     
