@@ -246,8 +246,8 @@ class CheckerSuite(unittest.TestCase):
     def test_20(self):
         input = """
         class ABC {
-            static int x = 1;
-            static float y = 5.2 + 4;
+            static int x;
+            static float y = 5.2;
         }
         class DEF {
             static final float x = 7;

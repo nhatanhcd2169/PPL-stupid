@@ -190,27 +190,32 @@ class StaticChecker(BaseVisitor, Stack):
         env = [{"class": "io", "statics": {"attrs": [], "methods": c}}]
         for x in ast.decl:
             env += [x.accept(self, env)]
-
+            
     def visitVarDecl(self, ast, c):
-        return {"name": "", "const": False}
+        name = ast.variable.accept(self, c)
+        type = ast.varType.accept(self, c)
+        init = ast.varInit.accept(self, c) if ast.varInit else [None, True]
+        return {"type": type, "name": name, "value_type": init[0], "const": True}
 
     def visitConstDecl(self, ast, c):
         name = ast.constant.accept(self, c)
         type = ast.constType.accept(self, c)
         init = ast.value.accept(self, c) if ast.value else [None, True]
-        check = self.checkType(type, init[0])
-        if not init[1]:
-            raise IllegalConstantExpression(ast.value)
-        if not check[0]:
-            if check[1] == "Literal":
-                raise TypeMismatchInConstant(ast)
-            else:
-                raise IllegalConstantExpression(ast.value)
         return {"type": type, "name": name, "value_type": init[0], "const": True}
 
+    def lookupClass(self, name, env):
+        for (index, item) in enumerate(env):
+            if item["class"] == name:
+                return [True, item, index]
+        return [False, None, None]
+    
     def visitClassDecl(self, ast, c):
         classname = ast.classname.accept(self, c)
         parentname = ast.parentname.accept(self, c) if ast.parentname else ""
+        if self.lookupClass(classname, c)[0]:
+            raise Redeclared(Class(), classname)
+        if self.lookupClass(parentname, c)[0]:
+            raise Redeclared(Class(), parentname)
         local = {
             "class": classname,
             "statics": {"attrs": [], "methods": []},
@@ -257,16 +262,12 @@ class StaticChecker(BaseVisitor, Stack):
 
     def visitAttributeDecl(self, ast, c):
         current = c[-1]["current"]
-        print(f"current class i am in: {current}")
+        inherit = c[-1]["inherit"]
         name = (
             ast.decl.variable.name
             if (self.getClass(ast.decl) == "VarDecl")
             else ast.decl.constant.name
         )
-        local = []
-        for x in c[:-1]:
-            if x["class"] == current:
-                local = x
         return ast.decl.accept(self, c)
 
     def visitIntType(self, ast, c):
