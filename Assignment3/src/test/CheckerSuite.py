@@ -225,3 +225,33 @@ class CheckerSuite(unittest.TestCase):
     #     )
     #     expect = "Illegal Constant Expression: FieldAccess(Id(Ex),Id(a))"
     #     self.assertTrue(TestChecker.test(input, expect, 417))
+    
+    # def test_19(self):
+    #     input = """
+    #     class Test 
+    #     {
+    #         int x;
+    #         int y;
+    #         int z;
+    #         final int u = 5;
+    #         final int v = 5 + u;
+    #         void run(int x, int y, float z) {
+    #             continue;
+    #         }
+    #     }
+    #     """
+    #     expect = "Illegal Constant Expression: FieldAccess(Id(Ex),Id(a))"
+    #     self.assertTrue(TestChecker.test(input, expect, 418))
+    
+    def test_20(self):
+        input = """
+        class ABC {
+            static int x = 1;
+            static float y = 5.2 + 4;
+        }
+        class DEF {
+            static final float x = 7;
+        }
+        """
+        expect = ""
+        self.assertTrue(TestChecker.test(input, expect, 419))
