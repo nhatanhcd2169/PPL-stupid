@@ -5,7 +5,7 @@ from AST import *
 from Visitor import *
 from StaticError import *
 
-# from main.bkool.utils.AST import *
+from main.bkool.utils.AST import *
 
 
 class MType:
@@ -183,14 +183,64 @@ class StaticChecker(BaseVisitor, Stack):
     def check(self):
         return self.ast.accept(self, StaticChecker.global_envi)
 
+    """UTILS"""
+    """UTILS"""
+    """UTILS"""
+    """UTILS"""
+    """UTILS"""
+    """UTILS"""
+
     def getClass(self, obj):
         return obj.__class__.__name__
+
+    def lookupClass(self, name, env):
+        for (index, item) in enumerate(env):
+            if item["class"] == name:
+                return [True, item, index]
+        return [False, None, None]
+
+    def lookup(self, name, env):
+        """
+        Class
+        {
+            "class": classname,
+            "statics": {"attrs": [], "methods": []},
+            "locals": {"attrs": [], "methods": []},
+        }
+        Attribute
+        {
+            "type": type,
+            "name": name,
+            "value_type": value_type,
+            "const": True
+        }
+        Methods
+        {
+            "return_type": type,
+            "name": name,
+            "param": [VarDecl],
+            "body": List[VarDecl + Statement]
+        }
+        """
+
+        for (class_i, class_item) in enumerate(env):
+            if class_item["class"] == name:
+                return [True, "class", class_item]
+            else:
+                for (statics_i, statics_item) in enumerate(class_item["statics"]):
+                    for (attrs_i, attrs_item) in enumerate(statics_item["attrs"]):
+                        if attrs_item["name"] == name:
+                            return [True, "attr", attrs_item]
+                    for (methods_i, methods_item) in enumerate(statics_item["methods"]):
+                        if methods_item["name"] == name:
+                            return [True, "method", methods_item]
+        return [False, None, None]
 
     def visitProgram(self, ast, c):
         env = [{"class": "io", "statics": {"attrs": [], "methods": c}}]
         for x in ast.decl:
             env += [x.accept(self, env)]
-            
+
     def visitVarDecl(self, ast, c):
         name = ast.variable.accept(self, c)
         type = ast.varType.accept(self, c)
@@ -203,19 +253,13 @@ class StaticChecker(BaseVisitor, Stack):
         init = ast.value.accept(self, c) if ast.value else [None, True]
         return {"type": type, "name": name, "value_type": init[0], "const": True}
 
-    def lookupClass(self, name, env):
-        for (index, item) in enumerate(env):
-            if item["class"] == name:
-                return [True, item, index]
-        return [False, None, None]
-    
     def visitClassDecl(self, ast, c):
         classname = ast.classname.accept(self, c)
         parentname = ast.parentname.accept(self, c) if ast.parentname else ""
         if self.lookupClass(classname, c)[0]:
             raise Redeclared(Class(), classname)
-        if self.lookupClass(parentname, c)[0]:
-            raise Redeclared(Class(), parentname)
+        if parentname != "" and not self.lookupClass(parentname, c)[0]:
+            raise Undeclared(Class(), parentname)
         local = {
             "class": classname,
             "statics": {"attrs": [], "methods": []},
@@ -230,25 +274,28 @@ class StaticChecker(BaseVisitor, Stack):
                     else mem.decl.constant.name
                 )
                 if name not in attr:
+                    obj = c + [local] + [{"current": classname, "inherit": parentname}]
                     if mem.kind.accept(self, local) == "Instance":
-                        member = mem.accept(
-                            self,
-                            c
-                            + [local]
-                            + [{"current": classname, "inherit": parentname}],
-                        )
-                        local["locals"]["attrs"].append(member)
+                        member = mem.accept(self, obj)
+                        local["locals"]["methods"].append(member)
                     else:
-                        member = mem.accept(
-                            self,
-                            c
-                            + [local]
-                            + [{"current": classname, "inherit": parentname}],
-                        )
-                        local["statics"]["attrs"].append(member)
+                        member = mem.accept(self, obj)
+                        local["statics"]["methods"].append(member)
                 else:
                     raise Redeclared(Attribute(), name)
-                attr.append(name)
+            else:
+                name = mem.name.accept(self, c)
+                if name not in attr:
+                    obj = c + [local] + [{"current": classname, "inherit": parentname}]
+                    if mem.kind.accept(self, local) == "Instance":
+                        member = mem.accept(self, obj)
+                        local["locals"]["methods"].append(member)
+                    else:
+                        member = mem.accept(self, obj)
+                        local["statics"]["methods"].append(member)
+                else:
+                    raise Redeclared(Method(), name)
+            attr.append(name)
         return local
 
     def visitStatic(self, ast, c):
@@ -258,8 +305,23 @@ class StaticChecker(BaseVisitor, Stack):
         return "Instance"
 
     def visitMethodDecl(self, ast, c):
-        pass
-
+        # kind: SIKind
+        # name: Id
+        # param: List[VarDecl]
+        # returnType: Type  # None for constructor
+        # body: Block
+        params = []
+        if len(ast.param) > 0:
+            for param in ast.param:
+                name = param.variable.name
+                names = [x["name"] for x in params]
+                if name not in names:
+                    member = param.accept(self, c)
+                else:
+                    raise Redeclared(Parameter(), name)
+                params.append(member)
+        print(params)
+        
     def visitAttributeDecl(self, ast, c):
         current = c[-1]["current"]
         inherit = c[-1]["inherit"]
@@ -331,7 +393,6 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitAssign(self, ast, c):
-
         pass
 
     def visitCallStmt(self, ast, c):
@@ -356,4 +417,8 @@ class StaticChecker(BaseVisitor, Stack):
         return ["self", True]
 
     def visitArrayLiteral(self, ast, c):
-        pass
+        list = [x.accept(self, c) for x in ast.value]
+        res = all(map(lambda x: x[0] == list[0][0] and x[1] == True, list))
+        if not res:
+            raise IllegalArrayLiteral(ast)
+        return list[0][0]
