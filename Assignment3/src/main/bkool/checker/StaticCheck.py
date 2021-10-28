@@ -181,7 +181,6 @@ class StaticChecker(BaseVisitor, Stack):
 
     def lookupVariableByHiarachy(self, name, env, child, parent=None):
         inMethod = env[-1]["method"] if "method" in env[-1] else ""
-        print(f"in method?: {inMethod}")
         for class_i, class_item in enumerate(env[:-1]):
             if class_item["class"] == child:
                 """get methods if inMethod != "" """
@@ -260,12 +259,19 @@ class StaticChecker(BaseVisitor, Stack):
                 stack.pop()
         return [False, None, None]
 
-    def lookupInside(self, name, env): 
-        print(f"looking up")
-        local = env[-1]["param"] + env[-1]["local"]
-        for i, x in enumerate(local):
-            print(f"local {i}: {x}")
-    
+    def lookupInside(self, name, env):
+        if "local" in env[-1]:
+            local = env[-1]["local"]
+            for i, x in enumerate(local):
+                if name == x["name"]:
+                    return [True, x, "local"]
+        lookup = self.lookupVariableByHiarachy(
+            name, env, env[-1]["current"], env[-1]["inherit"]
+        )
+        if lookup[0]:
+            return lookup
+        return [False, None, None]
+
     def visitProgram(self, ast, c):
         env = [{"class": "io", "statics": {"attrs": [], "methods": c}}]
         for x in ast.decl:
@@ -392,6 +398,7 @@ class StaticChecker(BaseVisitor, Stack):
         return "Instance"
 
     def visitMethodDecl(self, ast, c):
+        forStack = Stack()
         params = []
         if len(ast.param) > 0:
             for param in ast.param:
@@ -403,16 +410,19 @@ class StaticChecker(BaseVisitor, Stack):
                     raise Redeclared(Parameter(), name)
                 params.append(member)
         obj = c[-1]
+        kind = ast.kind.accept(self, c)
+        obj["static"] = True if kind == "Static" else False
         obj["method"] = ast.name.accept(self, c)
         obj["param"] = params
         obj["return_type"] = ast.returnType.accept(self, c)
+        obj["stack"] = forStack
         obj = c[:-1] + [obj]
         body = ast.body.accept(self, obj)
         return {
             "type": ast.returnType.accept(self, c),
             "name": ast.name.accept(self, c),
             "param": params,
-            "body": body
+            "body": body,
         }
 
     def visitAttributeDecl(self, ast, c):
@@ -553,7 +563,6 @@ class StaticChecker(BaseVisitor, Stack):
                     ast.body.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
                 )
                 checkId["body"] = res
-                print(f"result: {res}")
                 if res[0]:
                     if not res[1]["const"]:
                         isStatic = False
@@ -605,17 +614,17 @@ class StaticChecker(BaseVisitor, Stack):
         raise Undeclared(Class(), ast.classname.name)
 
     def visitId(self, ast, c):
-        """không biết nên thêm 1 field để nó nhận biết đây là từ Id mà ra không ?"""
         return ast.name
 
     def visitArrayCell(self, ast, c):
-        pass
-        # arr = self.getClass(ast.arr)
-        # if arr == "Id":
-        #     arrLookup = self.look
-        # elif arr == "FieldAccess":
-        # elif arr = "CallExpr":
-        # else:
+        arr = ast.arr.accept(self, c)
+        idx = ast.idx.accept(self, c)
+        findArrayType = self.lookupInside(arr, c)
+        print(f"{findArrayType}")
+        if findArrayType[1]["type"] != "array" or idx != "int":
+            raise TypeMismatchInExpression(ast)
+        else:
+            return findArrayType[1]["type"]["array"]
 
     def visitFieldAccess(self, ast, c):
         findField = self.lookupVariableFromAllClass(
@@ -639,8 +648,6 @@ class StaticChecker(BaseVisitor, Stack):
                 else:
                     raise TypeMismatchInExpression(ast)
             else:
-                "nếu e là instance"
-                "lookup e"
                 objname = ast.obj.accept(self, c)
                 if objname[0] == "self":
                     thisclass = self.lookupClass(c[-1]["current"], c)
@@ -674,36 +681,30 @@ class StaticChecker(BaseVisitor, Stack):
             raise Undeclared(Attribute(), ast.fieldname.accept(self, c))
 
     def visitBlock(self, ast, c):
-        forStack = Stack()
-        param = c[-1]["param"]
-        locals = []
+        locals = c[-1]["param"]
         for decl in ast.decl:
             name = decl.variable.name
-            names = [x["name"] for x in param] + [y["name"] for y in locals]
+            names = [x["name"] for x in locals]
             if name not in names:
                 member = decl.accept(self, c)
             else:
                 raise Redeclared(Variable(), name)
             locals.append(member)
-        c[-1]["local"] = locals 
-        print(f"locals: {locals}\nparams: {param}")
+        c[-1]["local"] = locals
         stmts = []
         for stmt in ast.stmt:
             if self.getClass(stmt) == "For":
-                forStack.push(stmt)
+                print("push")
+                c[-1]["stack"].push(stmt)
             if self.getClass(stmt) in ["Continue", "Break"]:
-                res = forStack.pop()
+                print("pop")
+                res = c[-1]["stack"].pop()
                 if not res:
                     raise MustInLoop(stmt)
             stmts += [stmt.accept(self, c)]
         return {"locals": locals, "stmts": stmts}
 
     def visitIf(self, ast, c):
-        """
-        expr:Expr
-        thenStmt:Stmt
-        elseStmt:Stmt = None # None if there is no else branch
-        """
         exp = ast.expr.accept(self, c)
         if exp[0] != "bool":
             raise TypeMismatchInStatement(ast)
@@ -712,16 +713,8 @@ class StaticChecker(BaseVisitor, Stack):
         return {"type": "stmt", "usage": "if", "then": thenStmt, "else": elseStmt}
 
     def visitFor(self, ast, c):
-        """
-        id:Id
-        expr1:Expr
-        expr2:Expr
-        up: bool #True => increase; False => decrease
-        loop:Stmt
-        """
         counter = ast.id.accept(self, c)
-        self.lookupInside(counter, c)
-        counterLookup = self.lookupVariableByHiarachy(counter, c, c[-1]["current"], c[-1]["inherit"])
+        counterLookup = self.lookupInside(counter, c)
         if counterLookup[0]:
             if counterLookup[1]["type"] != "int":
                 raise TypeMismatchInStatement(ast)
@@ -744,10 +737,10 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitReturn(self, ast, c):
-        """
-        expr:Expr
-        """
-        print(f"env of return: {c[-1]}")
+        exp = ast.expr.accept(self, c)
+        if exp[0] != c[-1]["return_type"]:
+            raise TypeMismatchInStatement(ast)
+
     def visitAssign(self, ast, c):
         pass
 

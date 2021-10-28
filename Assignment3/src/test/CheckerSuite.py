@@ -375,10 +375,28 @@ class CheckerSuite(unittest.TestCase):
                 int i;  
                 if 4 == 5 then {
                     for i := 0 to 100 do {continue;}
-                    return 5;
+                    return 5.5;
                 };
             }
         }
         """
-        expect = ""
+        expect = "Type Mismatch In Statement: Return(FloatLit(5.5))"
         self.assertTrue(TestChecker.test(input, expect, 428))
+        
+    def test_30(self):
+        input = """
+        class ABC {
+            int test() {
+                int i, j;
+                for i := 0 to 5 do {
+                    for j := 0 to 5 do {
+                        break;
+                    }
+                    break;
+                }
+                break;
+            }
+        }
+        """
+        expect = "Break Not In Loop"
+        self.assertTrue(TestChecker.test(input, expect, 429))
