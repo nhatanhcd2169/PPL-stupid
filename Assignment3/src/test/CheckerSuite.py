@@ -460,9 +460,9 @@ class CheckerSuite(unittest.TestCase):
             int X(int a, int b, int c) {
                 return a + b + c;
             }
-            # void main() {
+            void main() {
                 
-            # }
+            }
         }
         """
         expect = "Type Mismatch In Expression: ArrayCell(Id(a),FloatLit(0.5))"

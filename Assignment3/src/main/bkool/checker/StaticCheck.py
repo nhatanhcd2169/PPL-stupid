@@ -547,7 +547,7 @@ class StaticChecker(BaseVisitor, Stack):
         body = self.getClass(ast.body)
         if body not in primitive + ops:
             if body == "Id":
-                res = self.lookupVariableByHiarachy(
+                res = self.lookupInside(
                     ast.body.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
                 )
                 checkId["body"] = res
