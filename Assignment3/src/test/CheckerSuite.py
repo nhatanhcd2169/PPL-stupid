@@ -402,62 +402,68 @@ class CheckerSuite(unittest.TestCase):
     #     expect = "Break Not In Loop"
     #     self.assertTrue(TestChecker.test(input, expect, 429))
 
-    def test_31(self):
-        input = Program(
-            [
-                ClassDecl(
-                    Id("A"),
-                    [
-                        AttributeDecl(
-                            Instance(), VarDecl(Id("a"), ArrayType(5, IntType()))
-                        ),
-                        AttributeDecl(
-                            Instance(),
-                            VarDecl(
-                                Id("x"),
-                                FloatType(),
-                                BinaryOp(
-                                    "+",
-                                    ArrayCell(Id("a"), IntLiteral(0)),
-                                    IntLiteral(6),
-                                ),
-                            ),
-                        ),
-                        AttributeDecl(
-                            Instance(),
-                            VarDecl(
-                                Id("x"),
-                                FloatType(),
-                                BinaryOp(
-                                    "+",
-                                    ArrayCell(Id("a"), FloatLiteral(0.5)),
-                                    IntLiteral(7),
-                                ),
-                            ),
-                        ),
-                    ],
-                )
-            ]
-        )
-        """
-        class A 
-        {
-            int[5] a;
-            float x = a[0] + 6;
-            int x = a[0.5] + 7;
-        }
-        """
-        expect = "Redeclared Attribute: x"
-        self.assertTrue(TestChecker.test(input, expect, 430))
+    # def test_31(self):
+    #     input = Program(
+    #         [
+    #             ClassDecl(
+    #                 Id("A"),
+    #                 [
+    #                     AttributeDecl(
+    #                         Instance(), VarDecl(Id("a"), ArrayType(5, IntType()))
+    #                     ),
+    #                     AttributeDecl(
+    #                         Instance(),
+    #                         VarDecl(
+    #                             Id("x"),
+    #                             FloatType(),
+    #                             BinaryOp(
+    #                                 "+",
+    #                                 ArrayCell(Id("a"), IntLiteral(0)),
+    #                                 IntLiteral(6),
+    #                             ),
+    #                         ),
+    #                     ),
+    #                     AttributeDecl(
+    #                         Instance(),
+    #                         VarDecl(
+    #                             Id("x"),
+    #                             FloatType(),
+    #                             BinaryOp(
+    #                                 "+",
+    #                                 ArrayCell(Id("a"), FloatLiteral(0.5)),
+    #                                 IntLiteral(7),
+    #                             ),
+    #                         ),
+    #                     ),
+    #                 ],
+    #             )
+    #         ]
+    #     )
+    #     expect = "Redeclared Attribute: x"
+    #     self.assertTrue(TestChecker.test(input, expect, 430))
         
-    def test_32(self):
+    # def test_32(self):
+    #     input = """
+    #     class A 
+    #     {
+    #         int[5] a;
+    #         float x = a[0] + 6;
+    #         int y = a[0.5] + 7;
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: ArrayCell(Id(a),FloatLit(0.5))"
+    #     self.assertTrue(TestChecker.test(input, expect, 431))
+        
+    def test_33(self):
         input = """
-        class A 
-        {
-            int[5] a;
-            float x = a[0] + 6;
-            int y = a[0.5] + 7;
+        class A {
+            int X(int a, int b, int c) {
+                return a + b + c;
+            }
+            # void main() {
+                
+            # }
         }
         """
         expect = "Type Mismatch In Expression: ArrayCell(Id(a),FloatLit(0.5))"
-        self.assertTrue(TestChecker.test(input, expect, 431))
+        self.assertTrue(TestChecker.test(input, expect, 432))

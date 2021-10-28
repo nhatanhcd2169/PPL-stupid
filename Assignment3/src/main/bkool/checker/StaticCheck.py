@@ -65,8 +65,7 @@ class StaticChecker(BaseVisitor, Stack):
 
     def __init__(self, ast):
         self.ast = ast
-
-    """ENTRY"""
+        
     """
     Class
     {
@@ -107,7 +106,6 @@ class StaticChecker(BaseVisitor, Stack):
         inMethod = env[-1]["method"] if "method" in env[-1] else ""
         for class_i, class_item in enumerate(env[:-1]):
             if class_item["class"] == child:
-                """get methods if inMethod != "" """
                 if inMethod != "":
                     for statics_i, statics_item in enumerate(
                         class_item["statics"]["methods"]
@@ -119,7 +117,6 @@ class StaticChecker(BaseVisitor, Stack):
                     ):
                         if locals_item["name"] == name:
                             return [True, locals_item, "local", class_item["class"]]
-                """ normal routine """
                 for statics_i, statics_item in enumerate(
                     class_item["statics"]["attrs"]
                 ):
@@ -130,7 +127,6 @@ class StaticChecker(BaseVisitor, Stack):
                         return [True, locals_item, "local", class_item["class"]]
             for class_i, class_item in enumerate(env[1:-1]):
                 if class_item["class"] != child:
-                    """get methods if inMethod != "" """
                     if inMethod != "":
                         for statics_i, statics_item in enumerate(
                             class_item["statics"]["methods"]
@@ -154,7 +150,6 @@ class StaticChecker(BaseVisitor, Stack):
                                     class_item["class"],
                                     "inherited",
                                 ]
-                    """ normal routine """
                     for statics_i, statics_item in enumerate(
                         class_item["statics"]["attrs"]
                     ):
@@ -183,7 +178,6 @@ class StaticChecker(BaseVisitor, Stack):
         inMethod = env[-1]["method"] if "method" in env[-1] else ""
         for class_i, class_item in enumerate(env[:-1]):
             if class_item["class"] == child:
-                """get methods if inMethod != "" """
                 if inMethod != "":
                     for statics_i, statics_item in enumerate(
                         class_item["statics"]["methods"]
@@ -195,7 +189,6 @@ class StaticChecker(BaseVisitor, Stack):
                     ):
                         if locals_item["name"] == name:
                             return [True, locals_item, "local", class_item["class"]]
-                """ normal routine """
                 for statics_i, statics_item in enumerate(
                     class_item["statics"]["attrs"]
                 ):
@@ -209,7 +202,6 @@ class StaticChecker(BaseVisitor, Stack):
             while len(stack) > 0:
                 for class_i, class_item in enumerate(env[:-1]):
                     if class_item["class"] == stack[-1]:
-                        """get methods if inMethod != "" """
                         if inMethod != "":
                             for statics_i, statics_item in enumerate(
                                 class_item["statics"]["methods"]
@@ -233,7 +225,6 @@ class StaticChecker(BaseVisitor, Stack):
                                         class_item["class"],
                                         "inherited",
                                     ]
-                        """ normal routine """
                         for statics_i, statics_item in enumerate(
                             class_item["statics"]["attrs"]
                         ):
@@ -287,11 +278,9 @@ class StaticChecker(BaseVisitor, Stack):
             init = ast.varInit.accept(self, obj)
         else:
             init = ast.varInit.accept(self, c) if ast.varInit else [None, True]
-        """Không biết có thiếu gì ở đây không"""
         return {"type": type, "name": name, "value_type": init[0], "const": False}
 
     def visitConstDecl(self, ast, c):
-        """mmmm idk"""
         name = ast.constant.accept(self, c)
         type = ast.constType.accept(self, c)
         if self.getClass(ast.value) == "Id":
@@ -364,7 +353,6 @@ class StaticChecker(BaseVisitor, Stack):
                 else:
                     raise Redeclared(Attribute(), name)
             else:
-                """không biết có thiếu gì ở đây không?"""
                 name = mem.name.accept(self, c)
                 if name not in attr:
                     obj = (
@@ -469,8 +457,8 @@ class StaticChecker(BaseVisitor, Stack):
         op = ast.op
         if left not in primitive + ops or right not in primitive + ops:
             if left == "Id":
-                res = self.lookupVariableByHiarachy(
-                    ast.left.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+                res = self.lookupInside(
+                    ast.left.accept(self, c), c
                 )
                 checkId["left"] = res
                 if res[0]:
@@ -479,8 +467,8 @@ class StaticChecker(BaseVisitor, Stack):
                 else:
                     raise Undeclared(Identifier(), ast.left.accept(self, c))
             if right == "Id":
-                res = self.lookupVariableByHiarachy(
-                    ast.right.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+                res = self.lookupInside(
+                    ast.right.accept(self, c), c
                 )
                 checkId["right"] = res
                 if res[0]:
