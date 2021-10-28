@@ -66,6 +66,29 @@ class StaticChecker(BaseVisitor, Stack):
         self.ast = ast
 
     """ENTRY"""
+    """
+    Class
+    {
+        "class": classname,
+        "statics": {"attrs": [], "methods": []},
+        "locals": {"attrs": [], "methods": []},
+        inherit: []
+    }
+    Attribute
+    {
+        "type": type,
+        "name": name,
+        "value_type": value_type,
+        "const": True
+    }
+    Methods
+    {
+        "return_type": type,
+        "name": name,
+        "param": [VarDecl],
+        "body": List[VarDecl + Statement]
+    }
+    """
 
     def check(self):
         return self.ast.accept(self, StaticChecker.global_envi)
@@ -78,29 +101,6 @@ class StaticChecker(BaseVisitor, Stack):
             if item["class"] == name:
                 return [True, item, index]
         return [False, None, None]
-        """
-        Class
-        {
-            "class": classname,
-            "statics": {"attrs": [], "methods": []},
-            "locals": {"attrs": [], "methods": []},
-            inherit: []
-        }
-        Attribute
-        {
-            "type": type,
-            "name": name,
-            "value_type": value_type,
-            "const": True
-        }
-        Methods
-        {
-            "return_type": type,
-            "name": name,
-            "param": [VarDecl],
-            "body": List[VarDecl + Statement]
-        }
-        """
 
     def lookupVariable(self, name, env, child, parent=None):
         for class_i, class_item in enumerate(env[:-1]):
@@ -152,9 +152,11 @@ class StaticChecker(BaseVisitor, Stack):
         name = ast.variable.accept(self, c)
         type = ast.varType.accept(self, c)
         init = ast.varInit.accept(self, c) if ast.varInit else [None, True]
+        """Không biết có thiếu gì ở đây không"""
         return {"type": type, "name": name, "value_type": init[0], "const": False}
 
     def visitConstDecl(self, ast, c):
+        """mmmm idk"""
         name = ast.constant.accept(self, c)
         type = ast.constType.accept(self, c)
         if self.getClass(ast.value) == "Id":
@@ -227,6 +229,7 @@ class StaticChecker(BaseVisitor, Stack):
                 else:
                     raise Redeclared(Attribute(), name)
             else:
+                """không biết có thiếu gì ở đây không?"""
                 name = mem.name.accept(self, c)
                 if name not in attr:
                     obj = (
@@ -270,6 +273,7 @@ class StaticChecker(BaseVisitor, Stack):
                 else:
                     raise Redeclared(Parameter(), name)
                 params.append(member)
+        """kiểm tra params xong, còn phần body và add nguyên cụm lên environment trong class"""
         ast.body.accept(self, c)
 
     def visitAttributeDecl(self, ast, c):
@@ -337,12 +341,14 @@ class StaticChecker(BaseVisitor, Stack):
                 )
                 checkId["right"] = res
                 if res[0]:
-                    if not res[1]["const"]:
-                        isStatic = False
+                    if res[2] > 0:
+                        if not c[res[2]]["const"]:
+                            isStatic = False
+                    else:
+                        if not c[0][res[3]]["const"]:
+                            isStatic = False
                 else:
                     raise Undeclared(Identifier(), ast.right.accept(self, c))
-            if left != "Id" and right != "Id":
-                isStatic = False
         left = (
             ast.left.accept(self, c)
             if checkId["left"] == ""
@@ -405,14 +411,13 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitId(self, ast, c):
+        """không biết nên thêm 1 field để nó nhận biết đây là từ Id mà ra không ?"""
         return ast.name
 
     def visitArrayCell(self, ast, c):
         pass
 
     def visitFieldAccess(self, ast, c):
-        # obj:Expr
-        # fieldname:Id
         findField = self.lookupVariable(
             ast.fieldname.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
         )
@@ -425,6 +430,7 @@ class StaticChecker(BaseVisitor, Stack):
                     raise Undeclared(Class(), classname)
             else:
                 raise IllegalMemberAccess(ast)
+        """còn trường hợp access Instance field"""
         # else:
         #     findObj = self.lookupVariable(
         #         ast.obj.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
