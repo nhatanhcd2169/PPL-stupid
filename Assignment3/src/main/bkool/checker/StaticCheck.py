@@ -45,6 +45,7 @@ class Stack:
         except IndexError:
             return False
 
+
 class StaticChecker(BaseVisitor, Stack):
 
     global_envi = [
@@ -102,7 +103,42 @@ class StaticChecker(BaseVisitor, Stack):
                 return [True, item, index]
         return [False, None, None]
 
-    def lookupVariable(self, name, env, child, parent=None):
+    def lookupVariableFromAllClass(self, name, env, child):
+        for class_i, class_item in enumerate(env[:-1]):
+            if class_item["class"] == child:
+                for statics_i, statics_item in enumerate(
+                    class_item["statics"]["attrs"]
+                ):
+                    if statics_item["name"] == name:
+                        return [True, statics_item, "static", class_item["class"]]
+                for locals_i, locals_item in enumerate(class_item["locals"]["attrs"]):
+                    if locals_item["name"] == name:
+                        return [True, locals_item, "local", class_item["class"]]
+        for class_i, class_item in enumerate(env[1:-1]):
+            if class_item["class"] != child:
+                for statics_i, statics_item in enumerate(
+                    class_item["statics"]["attrs"]
+                ):
+                    if statics_item["name"] == name:
+                        return [
+                            True,
+                            statics_item,
+                            "static",
+                            class_item["class"],
+                            "inherited",
+                        ]
+                for locals_i, locals_item in enumerate(class_item["locals"]["attrs"]):
+                    if locals_item["name"] == name:
+                        return [
+                            True,
+                            locals_item,
+                            "local",
+                            class_item["class"],
+                            "inherited",
+                        ]
+        return [False, None, None]
+
+    def lookupVariableByHiarachy(self, name, env, child, parent=None):
         for class_i, class_item in enumerate(env[:-1]):
             if class_item["class"] == child:
                 for statics_i, statics_item in enumerate(
@@ -151,7 +187,13 @@ class StaticChecker(BaseVisitor, Stack):
     def visitVarDecl(self, ast, c):
         name = ast.variable.accept(self, c)
         type = ast.varType.accept(self, c)
-        init = ast.varInit.accept(self, c) if ast.varInit else [None, True]
+        if self.getClass(ast.varInit) == "NewExpr":
+            obj = c[-1]
+            obj["varname"] = name
+            obj = c[:-1] + [obj]
+            init = ast.varInit.accept(self, obj)
+        else:
+            init = ast.varInit.accept(self, c) if ast.varInit else [None, True]
         """Không biết có thiếu gì ở đây không"""
         return {"type": type, "name": name, "value_type": init[0], "const": False}
 
@@ -160,7 +202,7 @@ class StaticChecker(BaseVisitor, Stack):
         name = ast.constant.accept(self, c)
         type = ast.constType.accept(self, c)
         if self.getClass(ast.value) == "Id":
-            lookup = self.lookupVariable(
+            lookup = self.lookupVariableByHiarachy(
                 ast.value.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
             )
             if lookup[0]:
@@ -274,7 +316,11 @@ class StaticChecker(BaseVisitor, Stack):
                     raise Redeclared(Parameter(), name)
                 params.append(member)
         """kiểm tra params xong, còn phần body và add nguyên cụm lên environment trong class"""
-        ast.body.accept(self, c)
+        obj = c[-1]
+        obj["method"] = ast.name.accept(self, c)
+        obj = c[:-1] + [obj]
+        ast.body.accept(self, obj)
+        return
 
     def visitAttributeDecl(self, ast, c):
         current = c[-1]["current"]
@@ -322,7 +368,7 @@ class StaticChecker(BaseVisitor, Stack):
         op = ast.op
         if left not in primitive + ops or right not in primitive + ops:
             if left == "Id":
-                res = self.lookupVariable(
+                res = self.lookupVariableByHiarachy(
                     ast.left.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
                 )
                 checkId["left"] = res
@@ -332,7 +378,7 @@ class StaticChecker(BaseVisitor, Stack):
                 else:
                     raise Undeclared(Identifier(), ast.left.accept(self, c))
             if right == "Id":
-                res = self.lookupVariable(
+                res = self.lookupVariableByHiarachy(
                     ast.right.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
                 )
                 checkId["right"] = res
@@ -400,7 +446,21 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitNewExpr(self, ast, c):
-        pass
+        findclass = self.lookupClass(ast.classname.name, c)
+        name = c[-1]["method"] if "method" in c[-1] else c[-1]["varname"]
+        statics = findclass[1]["statics"]
+        locals = [findclass[1]["locals"]]
+        if findclass[0]:
+            return [
+                {
+                    "type": {"class": ast.classname.name},
+                    "name": name,
+                    "value_type": {"statics": statics, "locals": locals},
+                    "const": False,
+                },
+                False,
+            ]
+        raise Undeclared(Class(), ast.classname.name)
 
     def visitId(self, ast, c):
         """không biết nên thêm 1 field để nó nhận biết đây là từ Id mà ra không ?"""
@@ -410,31 +470,56 @@ class StaticChecker(BaseVisitor, Stack):
         pass
 
     def visitFieldAccess(self, ast, c):
-        findField = self.lookupVariable(
-            ast.fieldname.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+        findField = self.lookupVariableFromAllClass(
+            ast.fieldname.accept(self, c), c, c[-1]["current"]
         )
-        if findField[2] == "static":
-            if self.getClass(ast.obj) == "Id":
-                classname = ast.obj.accept(self, c)
-                if classname == findField[3]:
-                    return [findField[1]["type"], True, findField[1]["value_type"]]
+        if findField[0]:
+            if findField[2] == "static":
+                if self.getClass(ast.obj) == "Id":
+                    classname = ast.obj.accept(self, c)
+                    findObj = self.lookupVariableByHiarachy(
+                        ast.obj.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+                    )
+                    if classname == findField[3]:
+                        return [findField[1]["type"], True, findField[1]["value_type"]]
+                    else:
+                        raise Undeclared(Class(), classname)
                 else:
-                    raise Undeclared(Class(), classname)
+                    raise TypeMismatchInExpression(ast)
             else:
-                raise IllegalMemberAccess(ast)
-        """còn trường hợp access Instance field"""
-        # else:
-        #     findObj = self.lookupVariable(
-        #         ast.obj.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
-        #     )
-        #     if self.getClass(ast.obj) == "Id":
-        #         # x.o
-        #         objname = ast.obj.accept(self, c)
-        #         if not ("class" in findObj[1]["type"]):
-        #             raise TypeMismatchInExpression(ast)
-        #         else:
-        #             if findObj[3] == c[-1]["current"]: # same level
-        #                 raise
+                "nếu e là instance"
+                "lookup e"
+                objname = ast.obj.accept(self, c)
+                if objname[0] == "self":
+                    thisclass = self.lookupClass(c[-1]["current"], c)
+                    if findField[3] != thisclass[1]["class"]:
+                        raise Undeclared(Attribute(), ast.fieldname.accept(self, c))
+                else:
+                    findObj = self.lookupVariableByHiarachy(
+                        ast.obj.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+                    )
+                    if findObj[0]:
+                        if self.getClass(ast.obj) == "Id":
+                            if not ("class" in findObj[1]["type"]):
+                                raise TypeMismatchInExpression(ast)
+                            else:
+                                lookclass = self.lookupClass(findObj[3], c)
+                                if findObj[3] in (
+                                    [c[-1]["current"]] + lookclass[1]["inherit"]
+                                ):
+                                    return [
+                                        findField[1]["type"],
+                                        False,
+                                        findField[1]["value_type"],
+                                    ]
+                                else:
+                                    raise Undeclared(
+                                        Attribute(), ast.fieldname.accept(self, c)
+                                    )
+                        else:
+                            raise TypeMismatchInExpression(ast)
+        else:
+            raise Undeclared(Attribute(), ast.fieldname.accept(self, c))
 
     def visitBlock(self, ast, c):
         forStack = Stack()
@@ -486,7 +571,8 @@ class StaticChecker(BaseVisitor, Stack):
         return ["null", True]
 
     def visitSelfLiteral(self, ast, c):
-        return ["self", True]
+        # return ["self", True]
+        return {"class": c[-1]["current"]}
 
     def visitArrayLiteral(self, ast, c):
         list = [x.accept(self, c) for x in ast.value]

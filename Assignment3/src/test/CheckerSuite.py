@@ -283,16 +283,18 @@ class CheckerSuite(unittest.TestCase):
         expect = "Illegal Constant Expression: Id(x)"
         self.assertTrue(TestChecker.test(input, expect, 421))
     
-    # def test_23(self):
-    #     input = """
-    #     class A {
-    #         int x;
-    #     }
-    #     class B extends A {
-    #         int y;
-    #     }
-    #     class C extends B {
-    #         int z = 5;
-            
-    #     }
-    #     """
+    def test_23(self):
+        input = """
+        class A 
+        {
+            int x = 5;
+        }
+        class B
+        {
+            A y = new A();
+            float z1 = y.x +5.5;
+            float z2 = y.x + 5;
+        }
+        """
+        expect = ""
+        self.assertTrue(TestChecker.test(input, expect, 422))
