@@ -104,8 +104,22 @@ class StaticChecker(BaseVisitor, Stack):
         return [False, None, None]
 
     def lookupVariableFromAllClass(self, name, env, child):
+        inMethod = env[-1]["method"] if "method" in env[-1] else ""
         for class_i, class_item in enumerate(env[:-1]):
             if class_item["class"] == child:
+                """get methods if inMethod != "" """
+                if inMethod != "":
+                    for statics_i, statics_item in enumerate(
+                        class_item["statics"]["methods"]
+                    ):
+                        if statics_item["name"] == name:
+                            return [True, statics_item, "static", class_item["class"]]
+                    for locals_i, locals_item in enumerate(
+                        class_item["locals"]["methods"]
+                    ):
+                        if locals_item["name"] == name:
+                            return [True, locals_item, "local", class_item["class"]]
+                """ normal routine """
                 for statics_i, statics_item in enumerate(
                     class_item["statics"]["attrs"]
                 ):
@@ -114,33 +128,75 @@ class StaticChecker(BaseVisitor, Stack):
                 for locals_i, locals_item in enumerate(class_item["locals"]["attrs"]):
                     if locals_item["name"] == name:
                         return [True, locals_item, "local", class_item["class"]]
-        for class_i, class_item in enumerate(env[1:-1]):
-            if class_item["class"] != child:
-                for statics_i, statics_item in enumerate(
-                    class_item["statics"]["attrs"]
-                ):
-                    if statics_item["name"] == name:
-                        return [
-                            True,
-                            statics_item,
-                            "static",
-                            class_item["class"],
-                            "inherited",
-                        ]
-                for locals_i, locals_item in enumerate(class_item["locals"]["attrs"]):
-                    if locals_item["name"] == name:
-                        return [
-                            True,
-                            locals_item,
-                            "local",
-                            class_item["class"],
-                            "inherited",
-                        ]
+            for class_i, class_item in enumerate(env[1:-1]):
+                if class_item["class"] != child:
+                    """get methods if inMethod != "" """
+                    if inMethod != "":
+                        for statics_i, statics_item in enumerate(
+                            class_item["statics"]["methods"]
+                        ):
+                            if statics_item["name"] == name:
+                                return [
+                                    True,
+                                    statics_item,
+                                    "static",
+                                    class_item["class"],
+                                    "inherited",
+                                ]
+                        for locals_i, locals_item in enumerate(
+                            class_item["locals"]["methods"]
+                        ):
+                            if locals_item["name"] == name:
+                                return [
+                                    True,
+                                    locals_item,
+                                    "local",
+                                    class_item["class"],
+                                    "inherited",
+                                ]
+                    """ normal routine """
+                    for statics_i, statics_item in enumerate(
+                        class_item["statics"]["attrs"]
+                    ):
+                        if statics_item["name"] == name:
+                            return [
+                                True,
+                                statics_item,
+                                "static",
+                                class_item["class"],
+                                "inherited",
+                            ]
+                    for locals_i, locals_item in enumerate(
+                        class_item["locals"]["attrs"]
+                    ):
+                        if locals_item["name"] == name:
+                            return [
+                                True,
+                                locals_item,
+                                "local",
+                                class_item["class"],
+                                "inherited",
+                            ]
         return [False, None, None]
 
     def lookupVariableByHiarachy(self, name, env, child, parent=None):
+        inMethod = env[-1]["method"] if "method" in env[-1] else ""
+        print(f"in method?: {inMethod}")
         for class_i, class_item in enumerate(env[:-1]):
             if class_item["class"] == child:
+                """get methods if inMethod != "" """
+                if inMethod != "":
+                    for statics_i, statics_item in enumerate(
+                        class_item["statics"]["methods"]
+                    ):
+                        if statics_item["name"] == name:
+                            return [True, statics_item, "static", class_item["class"]]
+                    for locals_i, locals_item in enumerate(
+                        class_item["locals"]["methods"]
+                    ):
+                        if locals_item["name"] == name:
+                            return [True, locals_item, "local", class_item["class"]]
+                """ normal routine """
                 for statics_i, statics_item in enumerate(
                     class_item["statics"]["attrs"]
                 ):
@@ -154,6 +210,31 @@ class StaticChecker(BaseVisitor, Stack):
             while len(stack) > 0:
                 for class_i, class_item in enumerate(env[:-1]):
                     if class_item["class"] == stack[-1]:
+                        """get methods if inMethod != "" """
+                        if inMethod != "":
+                            for statics_i, statics_item in enumerate(
+                                class_item["statics"]["methods"]
+                            ):
+                                if statics_item["name"] == name:
+                                    return [
+                                        True,
+                                        statics_item,
+                                        "static",
+                                        class_item["class"],
+                                        "inherited",
+                                    ]
+                            for locals_i, locals_item in enumerate(
+                                class_item["locals"]["methods"]
+                            ):
+                                if locals_item["name"] == name:
+                                    return [
+                                        True,
+                                        locals_item,
+                                        "local",
+                                        class_item["class"],
+                                        "inherited",
+                                    ]
+                        """ normal routine """
                         for statics_i, statics_item in enumerate(
                             class_item["statics"]["attrs"]
                         ):
@@ -179,6 +260,12 @@ class StaticChecker(BaseVisitor, Stack):
                 stack.pop()
         return [False, None, None]
 
+    def lookupInside(self, name, env): 
+        print(f"looking up")
+        local = env[-1]["param"] + env[-1]["local"]
+        for i, x in enumerate(local):
+            print(f"local {i}: {x}")
+    
     def visitProgram(self, ast, c):
         env = [{"class": "io", "statics": {"attrs": [], "methods": c}}]
         for x in ast.decl:
@@ -315,16 +402,20 @@ class StaticChecker(BaseVisitor, Stack):
                 else:
                     raise Redeclared(Parameter(), name)
                 params.append(member)
-        """kiểm tra params xong, còn phần body và add nguyên cụm lên environment trong class"""
         obj = c[-1]
         obj["method"] = ast.name.accept(self, c)
+        obj["param"] = params
+        obj["return_type"] = ast.returnType.accept(self, c)
         obj = c[:-1] + [obj]
-        ast.body.accept(self, obj)
-        return
+        body = ast.body.accept(self, obj)
+        return {
+            "type": ast.returnType.accept(self, c),
+            "name": ast.name.accept(self, c),
+            "param": params,
+            "body": body
+        }
 
     def visitAttributeDecl(self, ast, c):
-        current = c[-1]["current"]
-        inherit = c[-1]["inherit"]
         name = (
             ast.decl.variable.name
             if (self.getClass(ast.decl) == "VarDecl")
@@ -348,7 +439,7 @@ class StaticChecker(BaseVisitor, Stack):
         return "void"
 
     def visitArrayType(self, ast, c):
-        return {"array": ast.eleType.accept(self, c)}
+        return {"array": ast.eleType.accept(self, c), "size": ast.size}
 
     def visitClassType(self, ast, c):
         return {"class": ast.classname.name}
@@ -411,7 +502,7 @@ class StaticChecker(BaseVisitor, Stack):
                 checkId["right"][1]["const"],
             ]
         )
-        
+
         if not left[1]:
             isStatic = False
         if not right[1]:
@@ -480,7 +571,7 @@ class StaticChecker(BaseVisitor, Stack):
                 checkId["body"][1]["const"],
             ]
         )
-        
+
         if not body[1]:
             isStatic = False
         body = ast.body.accept(self, c)
@@ -519,6 +610,12 @@ class StaticChecker(BaseVisitor, Stack):
 
     def visitArrayCell(self, ast, c):
         pass
+        # arr = self.getClass(ast.arr)
+        # if arr == "Id":
+        #     arrLookup = self.look
+        # elif arr == "FieldAccess":
+        # elif arr = "CallExpr":
+        # else:
 
     def visitFieldAccess(self, ast, c):
         findField = self.lookupVariableFromAllClass(
@@ -578,8 +675,19 @@ class StaticChecker(BaseVisitor, Stack):
 
     def visitBlock(self, ast, c):
         forStack = Stack()
+        param = c[-1]["param"]
+        locals = []
         for decl in ast.decl:
-            decl.accept(self, c)
+            name = decl.variable.name
+            names = [x["name"] for x in param] + [y["name"] for y in locals]
+            if name not in names:
+                member = decl.accept(self, c)
+            else:
+                raise Redeclared(Variable(), name)
+            locals.append(member)
+        c[-1]["local"] = locals 
+        print(f"locals: {locals}\nparams: {param}")
+        stmts = []
         for stmt in ast.stmt:
             if self.getClass(stmt) == "For":
                 forStack.push(stmt)
@@ -587,23 +695,59 @@ class StaticChecker(BaseVisitor, Stack):
                 res = forStack.pop()
                 if not res:
                     raise MustInLoop(stmt)
-            stmt.accept(self, c)
+            stmts += [stmt.accept(self, c)]
+        return {"locals": locals, "stmts": stmts}
 
     def visitIf(self, ast, c):
-        pass
+        """
+        expr:Expr
+        thenStmt:Stmt
+        elseStmt:Stmt = None # None if there is no else branch
+        """
+        exp = ast.expr.accept(self, c)
+        if exp[0] != "bool":
+            raise TypeMismatchInStatement(ast)
+        thenStmt = ast.thenStmt.accept(self, c)
+        elseStmt = None if not ast.elseStmt else ast.elseStmt.accept(self)
+        return {"type": "stmt", "usage": "if", "then": thenStmt, "else": elseStmt}
 
     def visitFor(self, ast, c):
+        """
+        id:Id
+        expr1:Expr
+        expr2:Expr
+        up: bool #True => increase; False => decrease
+        loop:Stmt
+        """
+        counter = ast.id.accept(self, c)
+        self.lookupInside(counter, c)
+        counterLookup = self.lookupVariableByHiarachy(counter, c, c[-1]["current"], c[-1]["inherit"])
+        if counterLookup[0]:
+            if counterLookup[1]["type"] != "int":
+                raise TypeMismatchInStatement(ast)
+        else:
+            raise Undeclared(Identifier(), counter)
+        assignexp = ast.expr1.accept(self, c)
+        if assignexp[0] != "int":
+            raise TypeMismatchInStatement(ast)
+        limitexp = ast.expr2.accept(self, c)
+        if limitexp[0] != "int":
+            raise TypeMismatchInStatement(ast)
+        up = ast.up
         stmt = ast.loop.accept(self, c)
+        return {"type": "stmt", "usage": "for", "up": up, "loop": stmt}
 
     def visitContinue(self, ast, c):
-        return
-
-    def visitBreak(self, ast, c):
-        return
-
-    def visitReturn(self, ast, c):
         pass
 
+    def visitBreak(self, ast, c):
+        pass
+
+    def visitReturn(self, ast, c):
+        """
+        expr:Expr
+        """
+        print(f"env of return: {c[-1]}")
     def visitAssign(self, ast, c):
         pass
 
@@ -626,7 +770,6 @@ class StaticChecker(BaseVisitor, Stack):
         return ["null", True]
 
     def visitSelfLiteral(self, ast, c):
-        # return ["self", True]
         return {"class": c[-1]["current"]}
 
     def visitArrayLiteral(self, ast, c):

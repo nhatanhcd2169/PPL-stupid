@@ -144,7 +144,7 @@ class CheckerSuite(unittest.TestCase):
             }
         }
         """
-        expect = "Break Not In Loop"
+        expect = "Undeclared Identifier: i"
         self.assertTrue(TestChecker.test(input, expect, 411))
 
     def test_13(self):
@@ -355,3 +355,30 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Illegal Constant Expression: UnaryOp(-,BinaryOp(+,BinaryOp(+,BinaryOp(+,IntLit(2),Id(x)),IntLit(7)),UnaryOp(-,IntLit(9))))"
         self.assertTrue(TestChecker.test(input, expect, 426))
+        
+    def test_28(self):
+        input = """
+        class A {
+            int math(int a, int b, float c) {
+                float a;
+            }
+        }
+        """
+        expect = "Redeclared Variable: a"
+        self.assertTrue(TestChecker.test(input, expect, 427))
+
+    def test_29(self):
+        input = """
+        class A {
+            int func(int a, int b) {
+                int c = 5;
+                int i;  
+                if 4 == 5 then {
+                    for i := 0 to 100 do {continue;}
+                    return 5;
+                };
+            }
+        }
+        """
+        expect = ""
+        self.assertTrue(TestChecker.test(input, expect, 428))
