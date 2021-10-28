@@ -288,13 +288,15 @@ class CheckerSuite(unittest.TestCase):
         class A 
         {
             int x = 5;
+            static int u = 10;
         }
         class B
         {
             A y = new A();
             float z1 = y.x +5.5;
             float z2 = y.x + 5;
+            final float u = A.u + 10;
         }
         """
-        expect = ""
+        expect = "Illegal Constant Expression: BinaryOp(+,FieldAccess(Id(A),Id(u)),IntLit(10))"
         self.assertTrue(TestChecker.test(input, expect, 422))

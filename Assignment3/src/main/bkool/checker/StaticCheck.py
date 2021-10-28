@@ -411,6 +411,10 @@ class StaticChecker(BaseVisitor, Stack):
                 checkId["right"][1]["const"],
             ]
         )
+        if len(left) == 3 and not left[1]:
+            isStatic = False
+        if len(right) == 3 and not right[1]:
+            isStatic = False
         if op in ["&&", "||"] and left[0] in ["bool"] and right[0] in ["bool"]:
             return ["bool", isStatic]
         elif (
@@ -481,7 +485,7 @@ class StaticChecker(BaseVisitor, Stack):
                         ast.obj.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
                     )
                     if classname == findField[3]:
-                        return [findField[1]["type"], True, findField[1]["value_type"]]
+                        return [findField[1]["type"], findField[1]["const"], findField[1]["value_type"]]
                     else:
                         raise Undeclared(Class(), classname)
                 else:
@@ -509,7 +513,7 @@ class StaticChecker(BaseVisitor, Stack):
                                 ):
                                     return [
                                         findField[1]["type"],
-                                        False,
+                                        findField[1]["const"],
                                         findField[1]["value_type"],
                                     ]
                                 else:
