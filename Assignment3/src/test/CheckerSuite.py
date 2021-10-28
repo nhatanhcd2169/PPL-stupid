@@ -300,3 +300,58 @@ class CheckerSuite(unittest.TestCase):
         """
         expect = "Illegal Constant Expression: BinaryOp(+,FieldAccess(Id(A),Id(u)),IntLit(10))"
         self.assertTrue(TestChecker.test(input, expect, 422))
+    def test_24(self):
+        input = """
+        class A 
+        {
+            int x = 6;
+        }
+        class B extends A
+        {
+            final float y = -(2 + 3);
+        }
+        """
+        expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(y),FloatType,UnaryOp(-,BinaryOp(+,IntLit(2),IntLit(3))))"
+        self.assertTrue(TestChecker.test(input, expect, 423))
+        
+    def test_25(self):
+        input = """
+        class A 
+        {
+            int x = 6;
+        }
+        class B extends A
+        {
+            final int y = -(2 + x);
+        }
+        """
+        expect = "Illegal Constant Expression: UnaryOp(-,BinaryOp(+,IntLit(2),Id(x)))"
+        self.assertTrue(TestChecker.test(input, expect, 424))
+        
+    def test_26(self):
+        input = """
+        class A 
+        {
+            int x = 6;
+        }
+        class B extends A
+        {
+            final int y = (2 + x + 7 + 9);
+        }
+        """
+        expect = "Illegal Constant Expression: BinaryOp(+,BinaryOp(+,BinaryOp(+,IntLit(2),Id(x)),IntLit(7)),IntLit(9))"
+        self.assertTrue(TestChecker.test(input, expect, 425))
+        
+    def test_27(self):
+        input = """
+        class A 
+        {
+            int x = 6;
+        }
+        class B extends A
+        {
+            final int y = -(2 + x + 7 + -9);
+        }
+        """
+        expect = "Illegal Constant Expression: UnaryOp(-,BinaryOp(+,BinaryOp(+,BinaryOp(+,IntLit(2),Id(x)),IntLit(7)),UnaryOp(-,IntLit(9))))"
+        self.assertTrue(TestChecker.test(input, expect, 426))

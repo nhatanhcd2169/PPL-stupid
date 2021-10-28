@@ -411,9 +411,10 @@ class StaticChecker(BaseVisitor, Stack):
                 checkId["right"][1]["const"],
             ]
         )
-        if len(left) == 3 and not left[1]:
+        
+        if not left[1]:
             isStatic = False
-        if len(right) == 3 and not right[1]:
+        if not right[1]:
             isStatic = False
         if op in ["&&", "||"] and left[0] in ["bool"] and right[0] in ["bool"]:
             return ["bool", isStatic]
@@ -444,7 +445,53 @@ class StaticChecker(BaseVisitor, Stack):
             raise TypeMismatchInExpression(ast)
 
     def visitUnaryOp(self, ast, c):
-        pass
+        primitive = [
+            "IntLiteral",
+            "FloatLiteral",
+            "BoolLiteral",
+            "StringLiteral",
+        ]
+        ops = ["BinaryOp", "UnaryOp"]
+        isStatic = True
+        checkId = {"body": ""}
+        op = ast.op
+        body = self.getClass(ast.body)
+        if body not in primitive + ops:
+            if body == "Id":
+                res = self.lookupVariableByHiarachy(
+                    ast.body.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
+                )
+                checkId["body"] = res
+                print(f"result: {res}")
+                if res[0]:
+                    if not res[1]["const"]:
+                        isStatic = False
+                else:
+                    raise Undeclared(Identifier(), ast.body.accept(self, c))
+        body = (
+            ast.body.accept(self, c)
+            if checkId["body"] == ""
+            else [
+                checkId["body"][1]["type"]
+                if not isinstance(checkId["body"][1]["type"], dict)
+                else checkId["body"][1]["type"]["class"]
+                if "class" in checkId["body"][1]["type"]
+                else checkId["body"][1]["type"]["array"],
+                checkId["body"][1]["const"],
+            ]
+        )
+        
+        if not body[1]:
+            isStatic = False
+        body = ast.body.accept(self, c)
+        if op in ["+", "-"] and body[0] in ["int"]:
+            return ["int", isStatic]
+        elif op in ["+", "-"] and body[0] in ["float"]:
+            return ["float", isStatic]
+        elif op in ["!"] and body[0] in ["bool"]:  # bool
+            return ["bool", isStatic]
+        else:
+            raise TypeMismatchInExpression(ast)
 
     def visitCallExpr(self, ast, c):
         pass
@@ -485,7 +532,11 @@ class StaticChecker(BaseVisitor, Stack):
                         ast.obj.accept(self, c), c, c[-1]["current"], c[-1]["inherit"]
                     )
                     if classname == findField[3]:
-                        return [findField[1]["type"], findField[1]["const"], findField[1]["value_type"]]
+                        return [
+                            findField[1]["type"],
+                            findField[1]["const"],
+                            findField[1]["value_type"],
+                        ]
                     else:
                         raise Undeclared(Class(), classname)
                 else:
