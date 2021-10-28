@@ -327,12 +327,8 @@ class StaticChecker(BaseVisitor, Stack):
                 )
                 checkId["left"] = res
                 if res[0]:
-                    if res[2] > 0:
-                        if not c[res[2]]["const"]:
-                            isStatic = False
-                    else:
-                        if not c[0][res[3]]["const"]:
-                            isStatic = False
+                    if not res[1]["const"]:
+                        isStatic = False
                 else:
                     raise Undeclared(Identifier(), ast.left.accept(self, c))
             if right == "Id":
@@ -341,12 +337,8 @@ class StaticChecker(BaseVisitor, Stack):
                 )
                 checkId["right"] = res
                 if res[0]:
-                    if res[2] > 0:
-                        if not c[res[2]]["const"]:
-                            isStatic = False
-                    else:
-                        if not c[0][res[3]]["const"]:
-                            isStatic = False
+                    if not res[1]["const"]:
+                        isStatic = False
                 else:
                     raise Undeclared(Identifier(), ast.right.accept(self, c))
         left = (
