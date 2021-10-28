@@ -620,11 +620,10 @@ class StaticChecker(BaseVisitor, Stack):
         arr = ast.arr.accept(self, c)
         idx = ast.idx.accept(self, c)
         findArrayType = self.lookupInside(arr, c)
-        print(f"{findArrayType}")
-        if findArrayType[1]["type"] != "array" or idx != "int":
+        if "array" not in findArrayType[1]["type"] or idx[0] != "int":
             raise TypeMismatchInExpression(ast)
         else:
-            return findArrayType[1]["type"]["array"]
+            return [findArrayType[1]["type"]["array"], False]
 
     def visitFieldAccess(self, ast, c):
         findField = self.lookupVariableFromAllClass(
@@ -694,10 +693,8 @@ class StaticChecker(BaseVisitor, Stack):
         stmts = []
         for stmt in ast.stmt:
             if self.getClass(stmt) == "For":
-                print("push")
                 c[-1]["stack"].push(stmt)
             if self.getClass(stmt) in ["Continue", "Break"]:
-                print("pop")
                 res = c[-1]["stack"].pop()
                 if not res:
                     raise MustInLoop(stmt)
